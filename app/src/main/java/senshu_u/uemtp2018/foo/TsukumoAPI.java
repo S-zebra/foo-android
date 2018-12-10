@@ -22,14 +22,16 @@ import java.util.List;
  * Created by s-zebra on 12/10/18.
  */
 public class TsukumoAPI {
-  private String token;
-  private TsukumoAPIFetchCallback listener;
+  private static String token;
   static final String SERVER_URL = "https://tsukumokku.herokuapp.com/api/v1";
   static final String POSTS_URL = "/posts";
   
-  public void setToken(String token, TsukumoAPIFetchCallback listener) {
-    this.token = token;
-    this.listener = listener;
+  public static String getToken() {
+    return token;
+  }
+  
+  public static void setToken(String token) {
+    TsukumoAPI.token = token;
   }
 }
 
@@ -80,8 +82,6 @@ class PostFetcher extends AsyncTask<Void, Void, List<Post>> {
     apiListenerWeakReference.get().onPostsFetched(posts);
   }
   
-  //多分他にも転用できる
-  
   /**
    * URIパラメーターを作るBuilderクラスです。
    */
@@ -124,7 +124,6 @@ class PostFetcher extends AsyncTask<Void, Void, List<Post>> {
       return fetcher;
     }
   }
-  
 }
 
 /**
