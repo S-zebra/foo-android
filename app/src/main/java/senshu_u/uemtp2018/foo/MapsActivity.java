@@ -93,6 +93,7 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
     mClusterManager = new ClusterManager<>(this, mMap);
     mMap.setOnCameraIdleListener(mClusterManager);
     mMap.setOnMarkerClickListener(mClusterManager);
+  
   }
   
   @Override

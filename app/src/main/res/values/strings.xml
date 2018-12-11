@@ -1,4 +1,8 @@
 <resources>
   <string name="app_name">foo</string>
   <string name="title_activity_maps">Map</string>
+  <string name="title_new_post">New Post</string>
+  <string name="button_relocate">Relocate</string>
+  <string name="content_placeholder">Enter text...</string>
+
 </resources>

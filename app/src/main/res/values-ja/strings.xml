@@ -1,0 +1,8 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+  <string name="app_name">foo</string>
+  <string name="title_new_post">新規投稿</string>
+  <string name="title_activity_maps">マップ</string>
+  <string name="button_relocate">位置を変更</string>
+  <string name="content_placeholder">内容を入力…</string>
+</resources>
