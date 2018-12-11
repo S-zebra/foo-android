@@ -1,8 +1,18 @@
 package senshu_u.uemtp2018.foo;
 
+import android.Manifest;
+import android.content.Intent;
+import android.content.pm.PackageManager;
+import android.location.Location;
+import android.location.LocationListener;
+import android.location.LocationManager;
+import android.os.Build;
 import android.os.Bundle;
+import android.support.annotation.NonNull;
+import android.support.design.widget.FloatingActionButton;
 import android.support.v4.app.FragmentActivity;
 import android.util.Log;
+import android.view.View;
 import android.widget.Toast;
 
 import com.google.android.gms.maps.GoogleMap;
@@ -13,21 +23,43 @@ import com.google.maps.android.clustering.ClusterManager;
 
 import java.util.List;
 
-public class MapsActivity extends FragmentActivity implements OnMapReadyCallback, TsukumoAPIFetchCallback {
+public class MapsActivity extends FragmentActivity implements OnMapReadyCallback, TsukumoAPIFetchCallback, LocationListener {
   
   private GoogleMap mMap;
   private ClusterManager<Post> mClusterManager;
+  private LocationManager mLocationManager;
+  private FloatingActionButton fab;
+  private static final int LOCATION_REQ_CODE = 1;
   
   @Override
   protected void onCreate(Bundle savedInstanceState) {
     super.onCreate(savedInstanceState);
     setContentView(R.layout.activity_maps);
+  
     // Obtain the SupportMapFragment and get notified when the map is ready to be used.
     SupportMapFragment mapFragment = (SupportMapFragment) getSupportFragmentManager()
       .findFragmentById(R.id.map);
     mapFragment.getMapAsync(this);
+    fab = findViewById(R.id.floatingActionButton);
+    fab.setOnClickListener(new View.OnClickListener() {
+      @Override
+      public void onClick(View v) {
+        startActivity(new Intent(MapsActivity.this, NewPostActivity.class));
+      }
+    });
   }
   
+  @Override
+  public void onRequestPermissionsResult(int requestCode, @NonNull String[] permissions, @NonNull int[] grantResults) {
+    super.onRequestPermissionsResult(requestCode, permissions, grantResults);
+    if (permissions[0].equals(Manifest.permission.ACCESS_FINE_LOCATION) &&
+      grantResults[0] != PackageManager.PERMISSION_GRANTED) {
+      Toast.makeText(this, "位置情報が拒否されています", Toast.LENGTH_SHORT).show();
+    } else {
+//      mLocationManager = (LocationManager) getSystemService(LOCATION_SERVICE);
+//      mLocationManager.requestLocationUpdates(LocationManager.GPS_PROVIDER, 500, 0, this);
+    }
+  }
   
   /**
    * Manipulates the map once available.
@@ -42,6 +74,16 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
   public void onMapReady(GoogleMap googleMap) {
     mMap = googleMap;
   
+    if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
+      if (checkSelfPermission(Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED) {
+        requestPermissions(new String[]{Manifest.permission.ACCESS_FINE_LOCATION}, LOCATION_REQ_CODE);
+      } else {
+        mMap.setMyLocationEnabled(true);
+      }
+    } else {
+      mMap.setMyLocationEnabled(true);
+    }
+    
     PostFetcher pf = new PostFetcher(this);
     pf.params()
       .position(new LatLng(35.606120, 139.527240))
@@ -65,4 +107,23 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
     }
   }
   
+  @Override
+  public void onLocationChanged(Location location) {
+  
+  }
+  
+  @Override
+  public void onStatusChanged(String provider, int status, Bundle extras) {
+  
+  }
+  
+  @Override
+  public void onProviderEnabled(String provider) {
+  
+  }
+  
+  @Override
+  public void onProviderDisabled(String provider) {
+  
+  }
 }
