@@ -12,6 +12,7 @@ import org.json.JSONObject;
 import org.jsoup.Connection;
 import org.jsoup.Jsoup;
 
+import java.io.IOException;
 import java.lang.ref.WeakReference;
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -33,6 +34,7 @@ public class TsukumoAPI {
   public static void setToken(String token) {
     TsukumoAPI.token = token;
   }
+  
 }
 
 class PostFetcher extends AsyncTask<Void, Void, List<Post>> {
@@ -126,6 +128,35 @@ class PostFetcher extends AsyncTask<Void, Void, List<Post>> {
   }
 }
 
+class PostSender extends AsyncTask<Post, Void, Boolean> {
+  private WeakReference<TsukumoAPISendCallback> callback;
+  
+  public PostSender(TsukumoAPISendCallback callback) {
+    this.callback = new WeakReference<>(callback);
+  }
+  
+  @Override
+  protected Boolean doInBackground(Post... posts) {
+    try {
+      Connection conn = Jsoup.connect(TsukumoAPI.SERVER_URL + TsukumoAPI.POSTS_URL)
+        .timeout(10000)
+        .ignoreContentType(true)
+        .header("API_TOKEN", "***REMOVED***")
+        .requestBody(posts[0].toJSONString());
+      conn.post();
+      return true;
+    } catch (IOException e) {
+      e.printStackTrace();
+      return false;
+    }
+  }
+  
+  @Override
+  protected void onPostExecute(Boolean aBoolean) {
+    callback.get().onSendTaskComplete(aBoolean);
+  }
+}
+
 /**
  * Foo用の投稿 (構造体)
  */
@@ -169,14 +200,14 @@ class Post implements ClusterItem {
     return new Post(root.getInt("id"), root.getInt("parent"), root.getDouble("latitude"), root.getDouble("longitude"), root.getString("text"));
   }
   
-  public JSONObject toJSONObject() {
+  public String toJSONString() {
     try {
       JSONObject jsonObject = new JSONObject();
       jsonObject.put("parent", parentID);
       jsonObject.put("lat", position.latitude);
       jsonObject.put("lon", position.longitude);
       jsonObject.put("text", text);
-      return jsonObject;
+      return jsonObject.toString();
     } catch (JSONException jsone) {
       jsone.printStackTrace();
       return null;
@@ -202,4 +233,17 @@ class Post implements ClusterItem {
   public String getSnippet() {
     return "";
   }
+}
+
+interface TsukumoAPIFetchCallback {
+  void onPostsFetched(List<Post> posts);
+}
+
+interface TsukumoAPISendCallback {
+  /**
+   * 送信タスク完了時に呼び出される
+   *
+   * @param succeeded 送信完了時はtrue、そうでなければfalse
+   */
+  void onSendTaskComplete(boolean succeeded);
 }

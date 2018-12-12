@@ -19,7 +19,7 @@
   </android.support.v7.widget.Toolbar>
 
   <EditText
-    android:id="@+id/editText"
+    android:id="@+id/contentEditor"
     android:layout_width="0dp"
     android:layout_height="wrap_content"
     android:layout_marginEnd="8dp"
@@ -32,35 +32,36 @@
     android:inputType="textMultiLine"
     app:layout_constraintEnd_toEndOf="parent"
     app:layout_constraintStart_toStartOf="parent"
-    app:layout_constraintTop_toBottomOf="@+id/textView"/>
+    app:layout_constraintTop_toBottomOf="@+id/myLocationLabel"/>
 
   <TextView
-    android:id="@+id/textView"
+    android:id="@+id/myLocationLabel"
     android:layout_width="0dp"
     android:layout_height="wrap_content"
-    android:layout_marginEnd="8dp"
-    android:layout_marginLeft="16dp"
-    android:layout_marginRight="8dp"
     android:layout_marginStart="16dp"
+    android:layout_marginLeft="16dp"
     android:layout_marginTop="16dp"
+    android:layout_marginEnd="8dp"
+    android:layout_marginRight="8dp"
+    android:ellipsize="end"
     android:gravity="center_vertical"
-    android:lines="2"
+    android:lines="3"
     android:textAppearance="@android:style/TextAppearance.DeviceDefault"
-    app:layout_constraintEnd_toStartOf="@+id/button"
+    app:layout_constraintEnd_toStartOf="@+id/relocateButton"
     app:layout_constraintHorizontal_bias="0.0"
     app:layout_constraintStart_toStartOf="parent"
     app:layout_constraintTop_toBottomOf="@+id/toolbar"
     tools:text="129.XXXXX, 31.YYYYYY"/>
 
   <Button
-    android:id="@+id/button"
+    android:id="@+id/relocateButton"
     android:layout_width="wrap_content"
     android:layout_height="wrap_content"
     android:layout_marginEnd="8dp"
     android:layout_marginRight="8dp"
     android:text="@string/button_relocate"
-    app:layout_constraintBottom_toBottomOf="@+id/textView"
+    app:layout_constraintBottom_toBottomOf="@+id/myLocationLabel"
     app:layout_constraintEnd_toEndOf="parent"
-    app:layout_constraintTop_toTopOf="@+id/textView"/>
+    app:layout_constraintTop_toTopOf="@+id/myLocationLabel"/>
 
 </android.support.constraint.ConstraintLayout>
