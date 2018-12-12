@@ -1,6 +1,7 @@
 package senshu_u.uemtp2018.foo;
 
 import android.os.AsyncTask;
+import android.support.annotation.NonNull;
 import android.util.Log;
 
 import com.google.android.gms.maps.model.LatLng;
@@ -12,7 +13,6 @@ import org.json.JSONObject;
 import org.jsoup.Connection;
 import org.jsoup.Jsoup;
 
-import java.io.IOException;
 import java.lang.ref.WeakReference;
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -22,26 +22,19 @@ import java.util.List;
 /**
  * Created by s-zebra on 12/10/18.
  */
-public class TsukumoAPI {
-  private static String token;
+abstract class TsukumoAPI {
+  
   static final String SERVER_URL = "https://tsukumokku.herokuapp.com/api/v1";
   static final String POSTS_URL = "/posts";
-  
-  public static String getToken() {
-    return token;
-  }
-  
-  public static void setToken(String token) {
-    TsukumoAPI.token = token;
-  }
-  
+  static final String ACCOUNT_VERIFY_URL = "/accounts/available";
+  static final String TOKEN_KEY = "Token";
 }
 
 class PostFetcher extends AsyncTask<Void, Void, List<Post>> {
-  private WeakReference<TsukumoAPIFetchCallback> apiListenerWeakReference;
+  private WeakReference<PostsFetchCallback> apiListenerWeakReference;
   private String query = "";
   
-  public PostFetcher(TsukumoAPIFetchCallback callback) {
+  public PostFetcher(PostsFetchCallback callback) {
     this.apiListenerWeakReference = new WeakReference<>(callback);
   }
   
@@ -129,10 +122,12 @@ class PostFetcher extends AsyncTask<Void, Void, List<Post>> {
 }
 
 class PostSender extends AsyncTask<Post, Void, Boolean> {
-  private WeakReference<TsukumoAPISendCallback> callback;
+  private WeakReference<PostSendCallback> callback;
+  private String token;
   
-  public PostSender(TsukumoAPISendCallback callback) {
+  public PostSender(PostSendCallback callback, @NonNull String token) {
     this.callback = new WeakReference<>(callback);
+    this.token = token;
   }
   
   @Override
@@ -141,11 +136,11 @@ class PostSender extends AsyncTask<Post, Void, Boolean> {
       Connection conn = Jsoup.connect(TsukumoAPI.SERVER_URL + TsukumoAPI.POSTS_URL)
         .timeout(10000)
         .ignoreContentType(true)
-        .header("API_TOKEN", "***REMOVED***")
+        .header("API_TOKEN", token)
         .requestBody(posts[0].toJSONString());
       conn.post();
       return true;
-    } catch (IOException e) {
+    } catch (Exception e) {
       e.printStackTrace();
       return false;
     }
@@ -155,6 +150,34 @@ class PostSender extends AsyncTask<Post, Void, Boolean> {
   protected void onPostExecute(Boolean aBoolean) {
     callback.get().onSendTaskComplete(aBoolean);
   }
+}
+
+class AccountVerifier extends AsyncTask<String, Void, Boolean> {
+  
+  private WeakReference<AccountVerificationCallback> callback;
+  
+  public AccountVerifier(AccountVerificationCallback callback) {
+    this.callback = new WeakReference<>(callback);
+  }
+  
+  @Override
+  protected Boolean doInBackground(String... strings) {
+    try {
+      Connection conn = Jsoup.connect(TsukumoAPI.SERVER_URL + TsukumoAPI.ACCOUNT_VERIFY_URL + "?token=" + strings[0]);
+      conn.ignoreContentType(true);
+      JSONObject obj = new JSONObject(conn.get().text());
+      return obj.getBoolean("result");
+    } catch (Exception e) {
+      e.printStackTrace();
+      return false;
+    }
+  }
+  
+  @Override
+  protected void onPostExecute(Boolean aBoolean) {
+    callback.get().onVerificationTaskComplete(aBoolean);
+  }
+  
 }
 
 /**
@@ -235,15 +258,19 @@ class Post implements ClusterItem {
   }
 }
 
-interface TsukumoAPIFetchCallback {
+interface PostsFetchCallback {
   void onPostsFetched(List<Post> posts);
 }
 
-interface TsukumoAPISendCallback {
+interface PostSendCallback {
   /**
    * 送信タスク完了時に呼び出される
    *
    * @param succeeded 送信完了時はtrue、そうでなければfalse
    */
   void onSendTaskComplete(boolean succeeded);
+}
+
+interface AccountVerificationCallback {
+  void onVerificationTaskComplete(boolean isValid);
 }

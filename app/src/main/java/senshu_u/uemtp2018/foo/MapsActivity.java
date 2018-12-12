@@ -2,10 +2,9 @@ package senshu_u.uemtp2018.foo;
 
 import android.Manifest;
 import android.content.Intent;
+import android.content.SharedPreferences;
 import android.content.pm.PackageManager;
-import android.location.Location;
-import android.location.LocationListener;
-import android.location.LocationManager;
+import android.net.Uri;
 import android.os.Build;
 import android.os.Bundle;
 import android.support.annotation.NonNull;
@@ -23,13 +22,16 @@ import com.google.maps.android.clustering.ClusterManager;
 
 import java.util.List;
 
-public class MapsActivity extends FragmentActivity implements OnMapReadyCallback, TsukumoAPIFetchCallback, LocationListener {
+public class MapsActivity extends FragmentActivity implements OnMapReadyCallback, PostsFetchCallback, AccountVerificationCallback {
   
   private GoogleMap mMap;
   private ClusterManager<Post> mClusterManager;
-  private LocationManager mLocationManager;
   private FloatingActionButton fab;
-  private static final int LOCATION_REQ_CODE = 1;
+  private final int LOCATION_REQ_CODE = 1;
+  private String tempToken;
+  private SharedPreferences sharedPref;
+  private final String LAST_LAT = "LAST_LAT";
+  private final String LAST_LON = "LAST_LON";
   
   @Override
   protected void onCreate(Bundle savedInstanceState) {
@@ -47,6 +49,21 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
         startActivity(new Intent(MapsActivity.this, NewPostActivity.class));
       }
     });
+    sharedPref = getSharedPreferences(getPackageName(), MODE_PRIVATE);
+    Uri receivedUri = getIntent().getData();
+    if (receivedUri != null) {
+      tempToken = receivedUri.getQueryParameter("token");
+      new AccountVerifier(this).execute(tempToken);
+    } else {
+      if (!isTokenPresent()) {
+        Toast.makeText(this, "ログインしていません。\nこのアプリを使うには、ログインが必要です。", Toast.LENGTH_SHORT).show();
+        //TODO: ログイン画面に遷移
+      }
+    }
+  }
+  
+  private boolean isTokenPresent() {
+    return sharedPref.getString(TsukumoAPI.TOKEN_KEY, null) != null;
   }
   
   @Override
@@ -56,6 +73,9 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
       grantResults[0] != PackageManager.PERMISSION_GRANTED) {
       Toast.makeText(this, "位置情報が拒否されています", Toast.LENGTH_SHORT).show();
     } else {
+      if (mMap != null) {
+        mMap.setMyLocationEnabled(true);
+      }
 //      mLocationManager = (LocationManager) getSystemService(LOCATION_SERVICE);
 //      mLocationManager.requestLocationUpdates(LocationManager.GPS_PROVIDER, 500, 0, this);
     }
@@ -93,7 +113,6 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
     mClusterManager = new ClusterManager<>(this, mMap);
     mMap.setOnCameraIdleListener(mClusterManager);
     mMap.setOnMarkerClickListener(mClusterManager);
-  
   }
   
   @Override
@@ -106,25 +125,29 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
     for (Post post : posts) {
       mClusterManager.addItem(post);
     }
+    mClusterManager.setOnClusterItemInfoWindowClickListener(new ClusterManager.OnClusterItemInfoWindowClickListener<Post>() {
+      @Override
+      public void onClusterItemInfoWindowClick(Post post) {
+      
+      }
+    });
+    try {
+      getSupportFragmentManager().findFragmentById(R.id.map).getView().findViewById(2).performClick();
+    } catch (NullPointerException npe) {
+      npe.printStackTrace();
+    }
   }
   
   @Override
-  public void onLocationChanged(Location location) {
-  
+  public void onVerificationTaskComplete(boolean isValid) {
+    if (isValid) {
+      Toast.makeText(this, "ログインが完了しました", Toast.LENGTH_SHORT).show();
+      SharedPreferences.Editor editor = sharedPref.edit();
+      editor.putString(TsukumoAPI.TOKEN_KEY, tempToken);
+      editor.apply();
+    } else {
+      Toast.makeText(this, "ログインできません", Toast.LENGTH_SHORT).show();
+    }
   }
   
-  @Override
-  public void onStatusChanged(String provider, int status, Bundle extras) {
-  
-  }
-  
-  @Override
-  public void onProviderEnabled(String provider) {
-  
-  }
-  
-  @Override
-  public void onProviderDisabled(String provider) {
-  
-  }
 }

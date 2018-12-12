@@ -1,6 +1,7 @@
 package senshu_u.uemtp2018.foo;
 
 import android.Manifest;
+import android.content.Context;
 import android.content.pm.PackageManager;
 import android.location.Address;
 import android.location.Geocoder;
@@ -28,13 +29,14 @@ import java.io.IOException;
 import java.util.List;
 
 
-public class NewPostActivity extends AppCompatActivity implements TsukumoAPISendCallback {
+public class NewPostActivity extends AppCompatActivity implements PostSendCallback {
   
   private FusedLocationProviderClient client;
   private TextView locationLabel;
   private EditText contentEditor;
   private MyLocationCallback locationCallback = new MyLocationCallback();
   private Location lastLocation;
+  private String token;
   
   @Override
   protected void onCreate(Bundle savedInstanceState) {
@@ -46,6 +48,7 @@ public class NewPostActivity extends AppCompatActivity implements TsukumoAPISend
     contentEditor = findViewById(R.id.contentEditor);
     setSupportActionBar(toolbar);
     startUpdatingLocation();
+    token = getSharedPreferences(getPackageName(), Context.MODE_PRIVATE).getString(TsukumoAPI.TOKEN_KEY, null);
   }
   
   public void startUpdatingLocation() {
@@ -83,10 +86,14 @@ public class NewPostActivity extends AppCompatActivity implements TsukumoAPISend
   public boolean onOptionsItemSelected(MenuItem item) {
     if (item.getItemId() == R.id.send) {
       if (lastLocation == null) return true;
+      if (token == null) {
+        Toast.makeText(this, "ログインされていないため、送信できません", Toast.LENGTH_SHORT).show();
+        return true;
+      }
       String text = contentEditor.getText().toString();
       if (text.length() == 0) return true;
       Post newPost = new Post(lastLocation.getLatitude(), lastLocation.getLongitude(), text);
-      PostSender sender = new PostSender(this);
+      PostSender sender = new PostSender(this, token);
       sender.execute(newPost);
     }
     return true;
