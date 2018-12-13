@@ -16,6 +16,8 @@ import android.util.Log;
 import android.view.View;
 import android.widget.Toast;
 
+import com.google.android.gms.maps.CameraUpdate;
+import com.google.android.gms.maps.CameraUpdateFactory;
 import com.google.android.gms.maps.GoogleMap;
 import com.google.android.gms.maps.OnMapReadyCallback;
 import com.google.android.gms.maps.SupportMapFragment;
@@ -34,6 +36,7 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
   private SharedPreferences sharedPref;
   private final String LAST_LAT = "LAST_LAT";
   private final String LAST_LON = "LAST_LON";
+  private final String LAST_ZOOM = "LAST_ZOOM";
   
   @Override
   protected void onCreate(Bundle savedInstanceState) {
@@ -105,7 +108,9 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
   @Override
   public void onMapReady(GoogleMap googleMap) {
     mMap = googleMap;
-  
+    LatLng lastPos = new LatLng(sharedPref.getFloat(LAST_LAT, 0), sharedPref.getFloat(LAST_LON, 0));
+    CameraUpdate camUpdate = CameraUpdateFactory.newLatLngZoom(lastPos, sharedPref.getFloat(LAST_ZOOM, 0));
+    mMap.moveCamera(camUpdate);
     if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
       if (checkSelfPermission(Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED) {
         requestPermissions(new String[]{Manifest.permission.ACCESS_FINE_LOCATION}, LOCATION_REQ_CODE);
@@ -163,4 +168,15 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
     }
   }
   
+  @Override
+  protected void onPause() {
+    super.onPause();
+    if (mMap == null) return;
+    SharedPreferences.Editor editor = sharedPref.edit();
+    LatLng camPos = mMap.getCameraPosition().target;
+    editor.putFloat(LAST_LAT, (float) camPos.latitude);
+    editor.putFloat(LAST_LON, (float) camPos.longitude);
+    editor.putFloat(LAST_ZOOM, mMap.getCameraPosition().zoom);
+    editor.apply();
+  }
 }
