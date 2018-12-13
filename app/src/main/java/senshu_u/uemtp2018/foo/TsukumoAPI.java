@@ -24,9 +24,10 @@ import java.util.List;
  */
 abstract class TsukumoAPI {
   
-  static final String SERVER_URL = "https://tsukumokku.herokuapp.com/api/v1";
-  static final String POSTS_URL = "/posts";
-  static final String ACCOUNT_VERIFY_URL = "/accounts/available";
+  static final String SERVER_URL = "https://tsukumokku.herokuapp.com";
+  private static final String API_PATH = SERVER_URL + "/api/v1";
+  static final String POSTS_URL = API_PATH + "/posts";
+  static final String ACCOUNT_VERIFY_URL = API_PATH + "/accounts/available";
   static final String TOKEN_KEY = "Token";
 }
 
@@ -57,7 +58,7 @@ class PostFetcher extends AsyncTask<Void, Void, List<Post>> {
   @Override
   protected List<Post> doInBackground(Void... voids) {
     try {
-      Connection conn = Jsoup.connect(TsukumoAPI.SERVER_URL + TsukumoAPI.POSTS_URL + query);
+      Connection conn = Jsoup.connect(TsukumoAPI.POSTS_URL + query);
       conn.ignoreContentType(true);
       String res = conn.get().text();
       JSONArray jsonArray = new JSONObject(res).getJSONArray("result");
@@ -133,7 +134,7 @@ class PostSender extends AsyncTask<Post, Void, Boolean> {
   @Override
   protected Boolean doInBackground(Post... posts) {
     try {
-      Connection conn = Jsoup.connect(TsukumoAPI.SERVER_URL + TsukumoAPI.POSTS_URL)
+      Connection conn = Jsoup.connect(TsukumoAPI.POSTS_URL)
         .timeout(10000)
         .ignoreContentType(true)
         .header("API_TOKEN", token)
@@ -163,7 +164,7 @@ class AccountVerifier extends AsyncTask<String, Void, Boolean> {
   @Override
   protected Boolean doInBackground(String... strings) {
     try {
-      Connection conn = Jsoup.connect(TsukumoAPI.SERVER_URL + TsukumoAPI.ACCOUNT_VERIFY_URL + "?token=" + strings[0]);
+      Connection conn = Jsoup.connect(TsukumoAPI.ACCOUNT_VERIFY_URL + "?token=" + strings[0]);
       conn.ignoreContentType(true);
       JSONObject obj = new JSONObject(conn.get().text());
       return obj.getBoolean("result");
