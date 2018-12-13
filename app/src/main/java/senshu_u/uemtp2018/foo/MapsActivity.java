@@ -1,6 +1,8 @@
 package senshu_u.uemtp2018.foo;
 
 import android.Manifest;
+import android.app.AlertDialog;
+import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.SharedPreferences;
 import android.content.pm.PackageManager;
@@ -55,15 +57,25 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
       tempToken = receivedUri.getQueryParameter("token");
       new AccountVerifier(this).execute(tempToken);
     } else {
-      if (!isTokenPresent()) {
-        Toast.makeText(this, "ログインしていません。\nこのアプリを使うには、ログインが必要です。", Toast.LENGTH_SHORT).show();
-        //TODO: ログイン画面に遷移
+      String savedToken = sharedPref.getString(TsukumoAPI.TOKEN_KEY, null);
+      if (savedToken == null) {
+        showLoginDialog();
       }
     }
   }
   
-  private boolean isTokenPresent() {
-    return sharedPref.getString(TsukumoAPI.TOKEN_KEY, null) != null;
+  private void showLoginDialog() {
+    new AlertDialog.Builder(this)
+      .setTitle(R.string.alert_login_title)
+      .setMessage(R.string.alert_login_body)
+      .setNegativeButton(R.string.later, null)
+      .setPositiveButton(R.string.login_now, new DialogInterface.OnClickListener() {
+        @Override
+        public void onClick(DialogInterface dialog, int which) {
+          Intent loginIntent = new Intent(Intent.ACTION_VIEW, Uri.parse(TsukumoAPI.SERVER_URL));
+          startActivity(loginIntent);
+        }
+      }).show();
   }
   
   @Override
@@ -111,6 +123,7 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
       .execute();
   
     mClusterManager = new ClusterManager<>(this, mMap);
+    mClusterManager.setAnimation(false);
     mMap.setOnCameraIdleListener(mClusterManager);
     mMap.setOnMarkerClickListener(mClusterManager);
   }

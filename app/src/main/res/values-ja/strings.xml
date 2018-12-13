@@ -5,4 +5,8 @@
   <string name="title_activity_maps">マップ</string>
   <string name="button_relocate">位置を変更</string>
   <string name="content_placeholder">内容を入力…</string>
+  <string name="alert_login_title">ログインが必要です</string>
+  <string name="alert_login_body">投稿するには、ログインが必要です。</string>
+  <string name="later">後で</string>
+  <string name="login_now">今すぐログイン</string>
 </resources>

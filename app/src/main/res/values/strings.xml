@@ -4,4 +4,8 @@
   <string name="title_new_post">New Post</string>
   <string name="button_relocate">Relocate</string>
   <string name="content_placeholder">Enter text...</string>
+  <string name="alert_login_title">Login is required</string>
+  <string name="alert_login_body">You need to login to make new posts.</string>
+  <string name="later">Later</string>
+  <string name="login_now">Log in now</string>
 </resources>
