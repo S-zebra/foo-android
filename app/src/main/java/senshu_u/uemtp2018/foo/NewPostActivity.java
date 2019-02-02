@@ -15,6 +15,7 @@ import android.support.v7.widget.Toolbar;
 import android.util.Log;
 import android.view.Menu;
 import android.view.MenuItem;
+import android.view.View;
 import android.widget.EditText;
 import android.widget.TextView;
 import android.widget.Toast;
@@ -30,6 +31,8 @@ import java.util.List;
 
 
 public class NewPostActivity extends AppCompatActivity implements PostSendCallback {
+  public static final String PARENT_ID = "parentID";
+  public static final String PARENT_TEXT = "parentText";
   
   private FusedLocationProviderClient client;
   private TextView locationLabel;
@@ -37,6 +40,9 @@ public class NewPostActivity extends AppCompatActivity implements PostSendCallba
   private MyLocationCallback locationCallback = new MyLocationCallback();
   private Location lastLocation;
   private String token;
+  private int parentID;
+  
+  private TextView inReplyToHeader, inReplyToLabel;
   
   @Override
   protected void onCreate(Bundle savedInstanceState) {
@@ -49,6 +55,14 @@ public class NewPostActivity extends AppCompatActivity implements PostSendCallba
     setSupportActionBar(toolbar);
     startUpdatingLocation();
     token = getSharedPreferences(getPackageName(), Context.MODE_PRIVATE).getString(TsukumoAPI.TOKEN_KEY, null);
+    parentID = getIntent().getIntExtra(PARENT_ID, -1);
+    inReplyToHeader = findViewById(R.id.inReplyToHeader);
+    inReplyToLabel = findViewById(R.id.replyToLabel);
+    if (parentID > 0) {
+      inReplyToHeader.setVisibility(View.VISIBLE);
+      inReplyToLabel.setVisibility(View.VISIBLE);
+      inReplyToLabel.setText(getIntent().getStringExtra(PARENT_TEXT));
+    }
   }
   
   public void startUpdatingLocation() {
@@ -93,6 +107,9 @@ public class NewPostActivity extends AppCompatActivity implements PostSendCallba
       String text = contentEditor.getText().toString();
       if (text.length() == 0) return true;
       Post newPost = new Post(lastLocation.getLatitude(), lastLocation.getLongitude(), text);
+      if (parentID > 0) {
+        newPost.setParentID(this.parentID);
+      }
       PostSender sender = new PostSender(this, token);
       sender.execute(newPost);
     }

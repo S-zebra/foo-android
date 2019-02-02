@@ -209,6 +209,10 @@ class Post implements ClusterItem {
     return parentID;
   }
   
+  public void setParentID(int parentID) {
+    this.parentID = parentID;
+  }
+  
   public void setPosition(LatLng position) {
     this.position = position;
   }

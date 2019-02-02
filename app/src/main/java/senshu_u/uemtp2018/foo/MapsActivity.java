@@ -3,7 +3,6 @@ package senshu_u.uemtp2018.foo;
 import android.Manifest;
 import android.app.AlertDialog;
 import android.app.Dialog;
-import android.content.Context;
 import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.SharedPreferences;
@@ -16,9 +15,7 @@ import android.support.design.widget.FloatingActionButton;
 import android.support.v4.app.DialogFragment;
 import android.support.v7.app.AppCompatActivity;
 import android.util.Log;
-import android.view.LayoutInflater;
 import android.view.View;
-import android.widget.TextView;
 import android.widget.Toast;
 
 import com.google.android.gms.maps.CameraUpdate;
@@ -162,10 +159,9 @@ public class MapsActivity extends AppCompatActivity implements OnMapReadyCallbac
     @Override
     public Dialog onCreateDialog(Bundle savedInstanceState) {
       AlertDialog.Builder builder = new AlertDialog.Builder(getActivity());
-      LayoutInflater inflater = (LayoutInflater) getActivity().getSystemService(Context.LAYOUT_INFLATER_SERVICE);
-      View content = inflater.inflate(R.layout.post_action_fragment, null);
-      ((TextView) content.findViewById(R.id.postContent)).setText(post.getText());
-      builder.setView(content);
+      PostActionFragment fragment = new PostActionFragment(getContext());
+      fragment.setPost(post);
+      builder.setView(fragment.inflate());
       return builder.create();
     }
   }
