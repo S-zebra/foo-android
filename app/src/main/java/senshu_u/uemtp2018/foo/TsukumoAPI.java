@@ -59,6 +59,7 @@ class PostFetcher extends AsyncTask<Void, Void, List<Post>> {
   protected List<Post> doInBackground(Void... voids) {
     try {
       Connection conn = Jsoup.connect(TsukumoAPI.POSTS_URL + query);
+      conn.timeout(100000);
       conn.ignoreContentType(true);
       String res = conn.get().text();
       JSONArray jsonArray = new JSONObject(res).getJSONArray("result");

@@ -4,6 +4,9 @@ android {
     compileSdkVersion 26
     defaultConfig {
         applicationId "senshu_u.uemtp2018.foo"
+        vectorDrawables{
+            useSupportLibrary = true
+        }
         minSdkVersion 16
         targetSdkVersion 26
         versionCode 1
