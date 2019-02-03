@@ -34,9 +34,15 @@ abstract class TsukumoAPI {
 class PostFetcher extends AsyncTask<Void, Void, List<Post>> {
   private WeakReference<PostsFetchCallback> apiListenerWeakReference;
   private String query = "";
+  private int id;
   
   public PostFetcher(PostsFetchCallback callback) {
+    this(-1, callback);
+  }
+  
+  public PostFetcher(int id, PostsFetchCallback callback) {
     this.apiListenerWeakReference = new WeakReference<>(callback);
+    this.id = id;
   }
   
   //Builderパターン適用してみた
@@ -58,7 +64,9 @@ class PostFetcher extends AsyncTask<Void, Void, List<Post>> {
   @Override
   protected List<Post> doInBackground(Void... voids) {
     try {
-      Connection conn = Jsoup.connect(TsukumoAPI.POSTS_URL + query);
+      String url = TsukumoAPI.POSTS_URL + (id > 0 ? "/" + id : query);
+      Log.d("TsukumoAPI", url);
+      Connection conn = Jsoup.connect(url);
       conn.timeout(100000);
       conn.ignoreContentType(true);
       String res = conn.get().text();

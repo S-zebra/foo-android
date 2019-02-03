@@ -7,16 +7,22 @@ import android.support.v7.widget.AppCompatImageButton;
 import android.util.AttributeSet;
 import android.util.Log;
 import android.view.View;
+import android.widget.LinearLayout;
 import android.widget.TextView;
+
+import java.util.Collections;
+import java.util.List;
 
 /**
  * Created by s-zebra on 2/2/19.
  */
-public class PostActionFragment extends ConstraintLayout {
+public class PostActionFragment extends ConstraintLayout implements PostsFetchCallback {
   public static final String TAG = PostActionFragment.class.getSimpleName();
   private Post post;
   private TextView contentLabel;
   private AppCompatImageButton replyButton, keepButton;
+  
+  private LinearLayout postsList;
   
   public PostActionFragment(Context context, AttributeSet attrs, int defStyleAttr) {
     super(context, attrs, defStyleAttr);
@@ -59,8 +65,26 @@ public class PostActionFragment extends ConstraintLayout {
         
       }
     });
+    if (post.getParentId() > 0) {
+      postsList = v.findViewById(R.id.postsList);
+      fetchParentPosts();
+    }
     return v;
   }
   
+  private void fetchParentPosts() {
+    new PostFetcher(post.getParentId(), this).execute();
+  }
+  
+  @Override
+  public void onPostsFetched(List<Post> posts) {
+    Collections.reverse(posts);
+    for (Post post : posts) {
+      ParentPostView ppv = new ParentPostView(getContext());
+      ppv.setPost(post);
+      postsList.addView(ppv.inflate(), 0);
+      Log.d(TAG, "Added new view: " + post.toString());
+    }
+  }
   
 }
