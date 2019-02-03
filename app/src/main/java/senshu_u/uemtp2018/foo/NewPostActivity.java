@@ -101,7 +101,7 @@ public class NewPostActivity extends AppCompatActivity implements PostSendCallba
     if (item.getItemId() == R.id.send) {
       if (lastLocation == null) return true;
       if (token == null) {
-        Toast.makeText(this, "ログインされていないため、送信できません", Toast.LENGTH_SHORT).show();
+        Toast.makeText(this, R.string.toast_not_logged_in, Toast.LENGTH_SHORT).show();
         return true;
       }
       String text = contentEditor.getText().toString();
@@ -119,10 +119,10 @@ public class NewPostActivity extends AppCompatActivity implements PostSendCallba
   @Override
   public void onSendTaskComplete(boolean succeeded) {
     if (succeeded) {
-      Toast.makeText(this, "投稿を送信しました", Toast.LENGTH_SHORT).show();
+      Toast.makeText(this, R.string.toast_post_sent, Toast.LENGTH_SHORT).show();
       finish();
     } else {
-      Toast.makeText(this, "投稿を送信できませんでした", Toast.LENGTH_SHORT).show();
+      Toast.makeText(this, R.string.toast_post_send_failed, Toast.LENGTH_SHORT).show();
     }
   }
   

@@ -88,7 +88,7 @@ public class MapsActivity extends AppCompatActivity implements OnMapReadyCallbac
     super.onRequestPermissionsResult(requestCode, permissions, grantResults);
     if (permissions[0].equals(Manifest.permission.ACCESS_FINE_LOCATION) &&
       grantResults[0] != PackageManager.PERMISSION_GRANTED) {
-      Toast.makeText(this, "位置情報が拒否されています", Toast.LENGTH_SHORT).show();
+      Toast.makeText(this, R.string.toast_location_denied, Toast.LENGTH_SHORT).show();
     } else {
       if (mMap != null) {
         mMap.setMyLocationEnabled(true);
@@ -187,12 +187,12 @@ public class MapsActivity extends AppCompatActivity implements OnMapReadyCallbac
   @Override
   public void onVerificationTaskComplete(boolean isValid) {
     if (isValid) {
-      Toast.makeText(this, "ログインが完了しました", Toast.LENGTH_SHORT).show();
+      Toast.makeText(this, R.string.toast_login_success, Toast.LENGTH_SHORT).show();
       SharedPreferences.Editor editor = sharedPref.edit();
       editor.putString(TsukumoAPI.TOKEN_KEY, tempToken);
       editor.apply();
     } else {
-      Toast.makeText(this, "ログインできません", Toast.LENGTH_SHORT).show();
+      Toast.makeText(this, R.string.toast_login_failure, Toast.LENGTH_SHORT).show();
     }
   }
   

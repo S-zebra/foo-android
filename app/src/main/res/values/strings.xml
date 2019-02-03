@@ -8,4 +8,13 @@
   <string name="alert_login_body">You need to login to make new posts.</string>
   <string name="later">Later</string>
   <string name="login_now">Log in now</string>
+  <string name="reply_to">Replying to:</string>
+  <string name="button_reply">Reply</string>
+  <string name="button_hold">Hold</string>
+  <string name="toast_login_success">Successfully logged in.</string>
+  <string name="toast_login_failure">Failed to log in.</string>
+  <string name="toast_location_denied">Location access is denied.</string>
+  <string name="toast_post_sent">Post is sent.</string>
+  <string name="toast_post_send_failed">Failed sending post.</string>
+  <string name="toast_not_logged_in">Not logged in.</string>
 </resources>

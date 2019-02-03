@@ -9,4 +9,13 @@
   <string name="alert_login_body">投稿するには、ログインが必要です。</string>
   <string name="later">後で</string>
   <string name="login_now">今すぐログイン</string>
+  <string name="reply_to">返信先:</string>
+  <string name="button_reply">追記する</string>
+  <string name="button_hold">持つ</string>
+  <string name="toast_login_success">ログインが成功しました</string>
+  <string name="toast_login_failure">ログインに失敗しました</string>
+  <string name="toast_location_denied">位置情報が拒否されています</string>
+  <string name="toast_post_sent">投稿を送信しました</string>
+  <string name="toast_post_send_failed">投稿を送信できませんでした</string>
+  <string name="toast_not_logged_in">ログインされていないため、送信できません</string>
 </resources>
