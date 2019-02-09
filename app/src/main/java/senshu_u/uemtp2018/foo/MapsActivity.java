@@ -190,7 +190,7 @@ public class MapsActivity extends AppCompatActivity implements OnMapReadyCallbac
     public Dialog onCreateDialog(Bundle savedInstanceState) {
       AlertDialog.Builder builder = new AlertDialog.Builder(getActivity());
       PostActionFragment fragment = new PostActionFragment(getContext());
-      Log.d("MapsActivity", post.toString());
+      Log.d("MapsActivity", String.valueOf(post));
       fragment.setPost(post);
       builder.setView(fragment.inflate());
       return builder.create();
