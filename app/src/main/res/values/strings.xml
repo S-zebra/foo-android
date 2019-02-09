@@ -21,4 +21,7 @@
   <string name="toast_post_fetch_failed">Unable to fetch posts.</string>
   <string name="sending">Sending...</string>
   <string name="dialog_fetching_posts">Fetching posts...</string>
+  <string name="menu_item_update_posts">Fetch new posts</string>
+  <string name="menu_item_send">Send</string>
+  <string name="menu_item_done">Done</string>
 </resources>
