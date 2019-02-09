@@ -18,4 +18,7 @@
   <string name="toast_post_sent">投稿を送信しました</string>
   <string name="toast_post_send_failed">投稿を送信できませんでした</string>
   <string name="toast_not_logged_in">ログインされていないため、送信できません</string>
+  <string name="toast_post_fetch_failed">投稿を取得できませんでした</string>
+  <string name="title_activity_relocate">位置を変更</string>
+  <string name="sending">送信中…</string>
 </resources>

@@ -17,4 +17,7 @@
   <string name="toast_post_sent">Post is sent.</string>
   <string name="toast_post_send_failed">Failed sending post.</string>
   <string name="toast_not_logged_in">Not logged in.</string>
+  <string name="title_activity_relocate">Relocate</string>
+  <string name="toast_post_fetch_failed">Unable to fetch posts.</string>
+  <string name="sending">Sending...</string>
 </resources>
