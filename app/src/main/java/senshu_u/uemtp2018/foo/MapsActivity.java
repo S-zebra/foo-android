@@ -3,6 +3,7 @@ package senshu_u.uemtp2018.foo;
 import android.Manifest;
 import android.app.AlertDialog;
 import android.app.Dialog;
+import android.app.ProgressDialog;
 import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.SharedPreferences;
@@ -40,6 +41,7 @@ public class MapsActivity extends AppCompatActivity implements OnMapReadyCallbac
   private String tempToken;
   private SharedPreferences sharedPref;
   private Toolbar toolbar;
+  private ProgressDialog mProgressDialog;
   private final String LAST_LAT = "LAST_LAT";
   private final String LAST_LON = "LAST_LON";
   private final String LAST_ZOOM = "LAST_ZOOM";
@@ -125,9 +127,10 @@ public class MapsActivity extends AppCompatActivity implements OnMapReadyCallbac
   void fetchPosts() {
     PostFetcher pf = new PostFetcher(this);
     pf.params()
-      .position(new LatLng(35.606120, 139.527240))
+      .limit(100)
       .apply()
       .execute();
+    mProgressDialog = ProgressDialog.show(this, "", "投稿を取得しています", true);
   }
   
   /**
@@ -154,9 +157,6 @@ public class MapsActivity extends AppCompatActivity implements OnMapReadyCallbac
     } else {
       mMap.setMyLocationEnabled(true);
     }
-  
-    fetchPosts();
-    
     mClusterManager = new ClusterManager<>(this, mMap);
     mClusterManager.setAnimation(false);
     mMap.setOnCameraIdleListener(mClusterManager);
@@ -170,6 +170,8 @@ public class MapsActivity extends AppCompatActivity implements OnMapReadyCallbac
         f.show(getSupportFragmentManager(), "");
       }
     });
+    
+    fetchPosts();
   }
   
   public static class PostActionDialogFragment extends DialogFragment {
@@ -202,9 +204,11 @@ public class MapsActivity extends AppCompatActivity implements OnMapReadyCallbac
       return;
     }
     mClusterManager.clearItems();
-    
+  
     Log.d(getClass().getSimpleName(), posts.toString());
     mClusterManager.addItems(posts);
+  
+    mProgressDialog.dismiss();
     try {
       getSupportFragmentManager().findFragmentById(R.id.map).getView().findViewById(2).performClick();
     } catch (NullPointerException npe) {
