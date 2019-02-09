@@ -14,7 +14,10 @@ import android.support.annotation.NonNull;
 import android.support.design.widget.FloatingActionButton;
 import android.support.v4.app.DialogFragment;
 import android.support.v7.app.AppCompatActivity;
+import android.support.v7.widget.Toolbar;
 import android.util.Log;
+import android.view.Menu;
+import android.view.MenuItem;
 import android.view.View;
 import android.widget.Toast;
 
@@ -36,6 +39,7 @@ public class MapsActivity extends AppCompatActivity implements OnMapReadyCallbac
   private final int LOCATION_REQ_CODE = 1;
   private String tempToken;
   private SharedPreferences sharedPref;
+  private Toolbar toolbar;
   private final String LAST_LAT = "LAST_LAT";
   private final String LAST_LON = "LAST_LON";
   private final String LAST_ZOOM = "LAST_ZOOM";
@@ -44,11 +48,16 @@ public class MapsActivity extends AppCompatActivity implements OnMapReadyCallbac
   protected void onCreate(Bundle savedInstanceState) {
     super.onCreate(savedInstanceState);
     setContentView(R.layout.activity_maps);
-  
+    setTitle(R.string.app_name);
+    
     // Obtain the SupportMapFragment and get notified when the map is ready to be used.
     SupportMapFragment mapFragment = (SupportMapFragment) getSupportFragmentManager()
       .findFragmentById(R.id.map);
     mapFragment.getMapAsync(this);
+  
+    toolbar = findViewById(R.id.mapToolBar);
+    setSupportActionBar(toolbar);
+    
     fab = findViewById(R.id.floatingActionButton);
     fab.setOnClickListener(new View.OnClickListener() {
       @Override
@@ -84,6 +93,21 @@ public class MapsActivity extends AppCompatActivity implements OnMapReadyCallbac
   }
   
   @Override
+  public boolean onCreateOptionsMenu(Menu menu) {
+    getMenuInflater().inflate(R.menu.map_menu, menu);
+    return super.onCreateOptionsMenu(menu);
+  }
+  
+  @Override
+  public boolean onOptionsItemSelected(MenuItem item) {
+    if (item.getItemId() == R.id.menuItem_refresh) {
+      if (mMap == null) return true;
+      fetchPosts();
+    }
+    return true;
+  }
+  
+  @Override
   public void onRequestPermissionsResult(int requestCode, @NonNull String[] permissions, @NonNull int[] grantResults) {
     super.onRequestPermissionsResult(requestCode, permissions, grantResults);
     if (permissions[0].equals(Manifest.permission.ACCESS_FINE_LOCATION) &&
@@ -96,6 +120,14 @@ public class MapsActivity extends AppCompatActivity implements OnMapReadyCallbac
 //      mLocationManager = (LocationManager) getSystemService(LOCATION_SERVICE);
 //      mLocationManager.requestLocationUpdates(LocationManager.GPS_PROVIDER, 500, 0, this);
     }
+  }
+  
+  void fetchPosts() {
+    PostFetcher pf = new PostFetcher(this);
+    pf.params()
+      .position(new LatLng(35.606120, 139.527240))
+      .apply()
+      .execute();
   }
   
   /**
@@ -122,13 +154,9 @@ public class MapsActivity extends AppCompatActivity implements OnMapReadyCallbac
     } else {
       mMap.setMyLocationEnabled(true);
     }
-    
-    PostFetcher pf = new PostFetcher(this);
-    pf.params()
-      .position(new LatLng(35.606120, 139.527240))
-      .apply()
-      .execute();
   
+    fetchPosts();
+    
     mClusterManager = new ClusterManager<>(this, mMap);
     mClusterManager.setAnimation(false);
     mMap.setOnCameraIdleListener(mClusterManager);
@@ -173,10 +201,10 @@ public class MapsActivity extends AppCompatActivity implements OnMapReadyCallbac
       Toast.makeText(this, "投稿を取得できませんでした。", Toast.LENGTH_SHORT).show();
       return;
     }
+    mClusterManager.clearItems();
+    
     Log.d(getClass().getSimpleName(), posts.toString());
-    for (Post post : posts) {
-      mClusterManager.addItem(post);
-    }
+    mClusterManager.addItems(posts);
     try {
       getSupportFragmentManager().findFragmentById(R.id.map).getView().findViewById(2).performClick();
     } catch (NullPointerException npe) {
