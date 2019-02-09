@@ -22,4 +22,7 @@
   <string name="title_activity_relocate">位置を変更</string>
   <string name="sending">送信中…</string>
   <string name="dialog_fetching_posts">投稿を取得しています…</string>
+  <string name="menu_item_update_posts">新しい投稿を取得</string>
+  <string name="menu_item_send">送信</string>
+  <string name="menu_item_done">決定</string>
 </resources>
