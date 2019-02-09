@@ -130,7 +130,7 @@ public class MapsActivity extends AppCompatActivity implements OnMapReadyCallbac
       .limit(100)
       .apply()
       .execute();
-    mProgressDialog = ProgressDialog.show(this, "", "投稿を取得しています", true);
+    mProgressDialog = ProgressDialog.show(this, "", getString(R.string.dialog_fetching_posts), true, true);
   }
   
   /**
@@ -200,7 +200,7 @@ public class MapsActivity extends AppCompatActivity implements OnMapReadyCallbac
   @Override
   public void onPostsFetched(List<Post> posts) {
     if (posts == null) {
-      Toast.makeText(this, "投稿を取得できませんでした。", Toast.LENGTH_SHORT).show();
+      Toast.makeText(this, R.string.toast_post_fetch_failed, Toast.LENGTH_SHORT).show();
       return;
     }
     mClusterManager.clearItems();

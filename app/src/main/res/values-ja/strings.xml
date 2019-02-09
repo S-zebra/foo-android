@@ -21,4 +21,5 @@
   <string name="toast_post_fetch_failed">投稿を取得できませんでした</string>
   <string name="title_activity_relocate">位置を変更</string>
   <string name="sending">送信中…</string>
+  <string name="dialog_fetching_posts">投稿を取得しています…</string>
 </resources>
