@@ -1,6 +1,7 @@
 package senshu_u.uemtp2018.foo;
 
 import android.Manifest;
+import android.app.ProgressDialog;
 import android.content.Context;
 import android.content.Intent;
 import android.content.pm.PackageManager;
@@ -48,6 +49,7 @@ public class NewPostActivity extends AppCompatActivity implements PostSendCallba
   private int parentID;
   
   private TextView inReplyToHeader, inReplyToLabel;
+  private ProgressDialog mProgressDialog;
   
   @Override
   protected void onCreate(Bundle savedInstanceState) {
@@ -143,6 +145,7 @@ public class NewPostActivity extends AppCompatActivity implements PostSendCallba
       }
       PostSender sender = new PostSender(this, token);
       sender.execute(newPost);
+      mProgressDialog = ProgressDialog.show(this, "", getString(R.string.sending), true);
     }
     return true;
   }
@@ -163,6 +166,7 @@ public class NewPostActivity extends AppCompatActivity implements PostSendCallba
   
   @Override
   public void onSendTaskComplete(boolean succeeded) {
+    mProgressDialog.dismiss();
     if (succeeded) {
       Toast.makeText(this, R.string.toast_post_sent, Toast.LENGTH_SHORT).show();
       finish();
