@@ -35,6 +35,7 @@
       <intent-filter>
         <action android:name="android.intent.action.MAIN"/>
         <action android:name="android.intent.action.VIEW"/>
+
         <category android:name="android.intent.category.LAUNCHER"/>
       </intent-filter>
       <intent-filter>
@@ -42,15 +43,18 @@
 
         <category android:name="android.intent.category.DEFAULT"/>
         <category android:name="android.intent.category.BROWSABLE"/>
+
         <data
           android:host="login"
           android:scheme="tmokku"/>
       </intent-filter>
     </activity>
-
     <activity android:name=".NewPostActivity">
     </activity>
-
+    <activity
+      android:name=".RelocateActivity"
+      android:label="@string/title_activity_relocate">
+    </activity>
   </application>
 
 </manifest>
