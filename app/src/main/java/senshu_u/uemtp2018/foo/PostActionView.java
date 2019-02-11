@@ -13,26 +13,31 @@ import android.widget.TextView;
 import java.util.Collections;
 import java.util.List;
 
+import senshu_u.uemtp2018.foo.tsukumo_api.Post;
+import senshu_u.uemtp2018.foo.tsukumo_api.PostFetcher;
+import senshu_u.uemtp2018.foo.tsukumo_api.PostsFetchCallback;
+
 /**
  * Created by s-zebra on 2/2/19.
  */
-public class PostActionFragment extends ConstraintLayout implements PostsFetchCallback {
-  public static final String TAG = PostActionFragment.class.getSimpleName();
+public class PostActionView extends ConstraintLayout implements PostsFetchCallback {
+  public static final String TAG = PostActionView.class.getSimpleName();
+  
   private Post post;
   private TextView contentLabel;
   private AppCompatImageButton replyButton, keepButton;
   
   private LinearLayout postsList;
   
-  public PostActionFragment(Context context, AttributeSet attrs, int defStyleAttr) {
+  public PostActionView(Context context, AttributeSet attrs, int defStyleAttr) {
     super(context, attrs, defStyleAttr);
   }
   
-  public PostActionFragment(Context context, AttributeSet attrs) {
+  public PostActionView(Context context, AttributeSet attrs) {
     super(context, attrs);
   }
   
-  public PostActionFragment(Context context) {
+  public PostActionView(Context context) {
     super(context);
   }
   
@@ -44,9 +49,9 @@ public class PostActionFragment extends ConstraintLayout implements PostsFetchCa
   View inflate() {
     View v = inflate(getContext(), R.layout.post_action_fragment, null);
     contentLabel = v.findViewById(R.id.postContent);
-    if (post != null) {
-      contentLabel.setText(post.getText());
-    }
+    if (post == null) return v;
+    contentLabel.setText(post.getText());
+    
     replyButton = v.findViewById(R.id.replyButton);
     replyButton.setOnClickListener(new OnClickListener() {
       @Override
@@ -59,12 +64,6 @@ public class PostActionFragment extends ConstraintLayout implements PostsFetchCa
     });
     
     keepButton = v.findViewById(R.id.keepButton);
-    keepButton.setOnClickListener(new OnClickListener() {
-      @Override
-      public void onClick(View v) {
-        
-      }
-    });
     if (post.getParentId() > 0) {
       postsList = v.findViewById(R.id.postsList);
       fetchParentPosts();
