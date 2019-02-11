@@ -7,6 +7,8 @@ import android.view.LayoutInflater;
 import android.view.View;
 import android.widget.TextView;
 
+import senshu_u.uemtp2018.foo.tsukumo_api.Post;
+
 /**
  * Created by s-zebra on 2/2/19.
  */
