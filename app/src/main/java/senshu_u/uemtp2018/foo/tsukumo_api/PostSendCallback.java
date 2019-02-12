@@ -4,7 +4,7 @@ package senshu_u.uemtp2018.foo.tsukumo_api;
  * Created by s-zebra on 2/11/19.
  */
 
-interface PostSendCallback {
+public interface PostSendCallback {
   /**
    * 送信タスク完了時に呼び出される
    *

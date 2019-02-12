@@ -33,6 +33,17 @@ public class Post implements ClusterItem {
     return new Post(root.getInt("id"), root.getInt("parent"), root.getDouble("latitude"), root.getDouble("longitude"), root.getString("text"));
   }
   
+  /**
+   * ローカルに格納されたJSONから解析します。
+   *
+   * @param root
+   * @return
+   * @throws JSONException
+   */
+  public static Post fromLocalJSON(JSONObject root) throws JSONException {
+    return new Post(root.getInt("id"), root.getInt("parent"), root.getDouble("lat"), root.getDouble("lon"), root.getString("text"));
+  }
+  
   public int getId() {
     return ID;
   }
@@ -56,6 +67,7 @@ public class Post implements ClusterItem {
   public String toJSONString() {
     try {
       JSONObject jsonObject = new JSONObject();
+      jsonObject.put("id", ID);
       jsonObject.put("parent", parentID);
       jsonObject.put("lat", position.latitude);
       jsonObject.put("lon", position.longitude);
