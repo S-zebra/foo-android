@@ -14,6 +14,7 @@ import java.lang.ref.WeakReference;
 public class AccountVerifier extends AsyncTask<String, Void, Boolean> {
   
   private WeakReference<AccountVerificationCallback> callback;
+  private String token;
   
   public AccountVerifier(AccountVerificationCallback callback) {
     this.callback = new WeakReference<>(callback);
@@ -21,8 +22,9 @@ public class AccountVerifier extends AsyncTask<String, Void, Boolean> {
   
   @Override
   protected Boolean doInBackground(String... strings) {
+    this.token = strings[0];
     try {
-      Connection conn = Jsoup.connect(TsukumoAPI.ACCOUNT_VERIFY_URL + "?token=" + strings[0]);
+      Connection conn = Jsoup.connect(TsukumoAPI.ACCOUNT_VERIFY_URL + "?token=" + token);
       conn.ignoreContentType(true);
       JSONObject obj = new JSONObject(conn.get().text());
       return obj.getBoolean("result");
@@ -34,7 +36,7 @@ public class AccountVerifier extends AsyncTask<String, Void, Boolean> {
   
   @Override
   protected void onPostExecute(Boolean aBoolean) {
-    callback.get().onVerificationTaskComplete(aBoolean);
+    callback.get().onAccountVerified(token, aBoolean);
   }
   
 }
