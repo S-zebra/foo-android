@@ -25,4 +25,7 @@
   <string name="menu_item_update_posts">新しい投稿を取得</string>
   <string name="menu_item_send">送信</string>
   <string name="menu_item_done">決定</string>
+  <string name="toast_post_put_success">現在地に投稿を置きました</string>
+  <string name="toast_post_put_failed">通信に失敗したため、投稿を置けませんでした</string>
+  <string name="dialog_putting_post">投稿を置いています…</string>
 </resources>
