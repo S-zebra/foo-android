@@ -14,7 +14,6 @@ import android.os.Bundle;
 import android.support.annotation.NonNull;
 import android.support.design.widget.FloatingActionButton;
 import android.support.v4.app.DialogFragment;
-import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.Toolbar;
 import android.util.Log;
 import android.view.Menu;
@@ -22,6 +21,9 @@ import android.view.MenuItem;
 import android.view.View;
 import android.widget.Toast;
 
+import com.google.android.gms.location.LocationAvailability;
+import com.google.android.gms.location.LocationCallback;
+import com.google.android.gms.location.LocationResult;
 import com.google.android.gms.maps.CameraUpdate;
 import com.google.android.gms.maps.CameraUpdateFactory;
 import com.google.android.gms.maps.GoogleMap;
@@ -37,8 +39,6 @@ public class MapsActivity extends AppCompatActivity implements OnMapReadyCallbac
   private GoogleMap mMap;
   private ClusterManager<Post> mClusterManager;
   private FloatingActionButton fab;
-  private final int LOCATION_REQ_CODE = 1;
-  private String tempToken;
   private SharedPreferences sharedPref;
   private Toolbar toolbar;
   private ProgressDialog mProgressDialog;
@@ -70,7 +70,7 @@ public class MapsActivity extends AppCompatActivity implements OnMapReadyCallbac
     sharedPref = getSharedPreferences(getPackageName(), MODE_PRIVATE);
     Uri receivedUri = getIntent().getData();
     if (receivedUri != null) {
-      tempToken = receivedUri.getQueryParameter("token");
+      String tempToken = receivedUri.getQueryParameter("token");
       new AccountVerifier(this).execute(tempToken);
     } else {
       String savedToken = sharedPref.getString(TsukumoAPI.TOKEN_KEY, null);
@@ -78,6 +78,8 @@ public class MapsActivity extends AppCompatActivity implements OnMapReadyCallbac
         showLoginDialog();
       }
     }
+  
+    setLocationCallback(locationCallback);
   }
   
   private void showLoginDialog() {
@@ -109,30 +111,6 @@ public class MapsActivity extends AppCompatActivity implements OnMapReadyCallbac
     return true;
   }
   
-  @Override
-  public void onRequestPermissionsResult(int requestCode, @NonNull String[] permissions, @NonNull int[] grantResults) {
-    super.onRequestPermissionsResult(requestCode, permissions, grantResults);
-    if (permissions[0].equals(Manifest.permission.ACCESS_FINE_LOCATION) &&
-      grantResults[0] != PackageManager.PERMISSION_GRANTED) {
-      Toast.makeText(this, R.string.toast_location_denied, Toast.LENGTH_SHORT).show();
-    } else {
-      if (mMap != null) {
-        mMap.setMyLocationEnabled(true);
-      }
-//      mLocationManager = (LocationManager) getSystemService(LOCATION_SERVICE);
-//      mLocationManager.requestLocationUpdates(LocationManager.GPS_PROVIDER, 500, 0, this);
-    }
-  }
-  
-  void fetchPosts() {
-    PostFetcher pf = new PostFetcher(this);
-    pf.params()
-      .limit(100)
-      .apply()
-      .execute();
-    mProgressDialog = ProgressDialog.show(this, "", getString(R.string.dialog_fetching_posts), true, true);
-  }
-  
   /**
    * Manipulates the map once available.
    * This callback is triggered when the map is ready to be used.
@@ -148,15 +126,7 @@ public class MapsActivity extends AppCompatActivity implements OnMapReadyCallbac
     LatLng lastPos = new LatLng(sharedPref.getFloat(LAST_LAT, 0), sharedPref.getFloat(LAST_LON, 0));
     CameraUpdate camUpdate = CameraUpdateFactory.newLatLngZoom(lastPos, sharedPref.getFloat(LAST_ZOOM, 0));
     mMap.moveCamera(camUpdate);
-    if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
-      if (checkSelfPermission(Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED) {
-        requestPermissions(new String[]{Manifest.permission.ACCESS_FINE_LOCATION}, LOCATION_REQ_CODE);
-      } else {
-        mMap.setMyLocationEnabled(true);
-      }
-    } else {
-      mMap.setMyLocationEnabled(true);
-    }
+    mMap.setMyLocationEnabled(true);
     mClusterManager = new ClusterManager<>(this, mMap);
     mClusterManager.setAnimation(false);
     mMap.setOnCameraIdleListener(mClusterManager);
@@ -167,10 +137,10 @@ public class MapsActivity extends AppCompatActivity implements OnMapReadyCallbac
       public void onClusterItemInfoWindowClick(Post post) {
         PostActionDialogFragment f = new PostActionDialogFragment();
         f.setPost(post);
+        f.setMapsActivity(MapsActivity.this);
         f.show(getSupportFragmentManager(), "");
       }
     });
-    
     fetchPosts();
   }
   
@@ -197,18 +167,19 @@ public class MapsActivity extends AppCompatActivity implements OnMapReadyCallbac
     }
   }
   
+  @SuppressLint ("ResourceType")
   @Override
   public void onPostsFetched(List<Post> posts) {
+    mProgressDialog.dismiss();
     if (posts == null) {
       Toast.makeText(this, R.string.toast_post_fetch_failed, Toast.LENGTH_SHORT).show();
       return;
     }
     mClusterManager.clearItems();
-  
+    
     Log.d(getClass().getSimpleName(), posts.toString());
     mClusterManager.addItems(posts);
-  
-    mProgressDialog.dismiss();
+    
     try {
       getSupportFragmentManager().findFragmentById(R.id.map).getView().findViewById(2).performClick();
     } catch (NullPointerException npe) {
@@ -217,14 +188,26 @@ public class MapsActivity extends AppCompatActivity implements OnMapReadyCallbac
   }
   
   @Override
-  public void onVerificationTaskComplete(boolean isValid) {
-    if (isValid) {
+  public void onAccountVerified(String token, boolean valid) {
+    if (valid) {
       Toast.makeText(this, R.string.toast_login_success, Toast.LENGTH_SHORT).show();
-      SharedPreferences.Editor editor = sharedPref.edit();
-      editor.putString(TsukumoAPI.TOKEN_KEY, tempToken);
-      editor.apply();
+      sharedPref.edit()
+        .putString(TsukumoAPI.TOKEN_KEY, token)
+        .apply();
     } else {
       Toast.makeText(this, R.string.toast_login_failure, Toast.LENGTH_SHORT).show();
+    }
+  }
+  
+  @Override
+  public void onLocationSent(boolean success) {
+    mProgressDialog.dismiss();
+    Toast.makeText(MapsActivity.this, success ? R.string.toast_post_put_success : R.string.toast_post_put_failed, Toast.LENGTH_SHORT).show();
+    if (success) {
+      sharedPref.edit()
+        .remove(SP_KEPT_POST)
+        .apply();
+      putButton.setVisibility(View.GONE);
     }
   }
   
@@ -232,11 +215,62 @@ public class MapsActivity extends AppCompatActivity implements OnMapReadyCallbac
   protected void onPause() {
     super.onPause();
     if (mMap == null) return;
-    SharedPreferences.Editor editor = sharedPref.edit();
     LatLng camPos = mMap.getCameraPosition().target;
-    editor.putFloat(LAST_LAT, (float) camPos.latitude);
-    editor.putFloat(LAST_LON, (float) camPos.longitude);
-    editor.putFloat(LAST_ZOOM, mMap.getCameraPosition().zoom);
-    editor.apply();
+    sharedPref.edit()
+      .putFloat(LAST_LAT, (float) camPos.latitude)
+      .putFloat(LAST_LON, (float) camPos.longitude)
+      .putFloat(LAST_ZOOM, mMap.getCameraPosition().zoom)
+      .apply();
+  }
+  
+  public static class PostActionDialogFragment extends DialogFragment {
+    private Post post;
+    private MapsActivity mapsActivity;
+    
+    public Post getPost() {
+      return post;
+    }
+    
+    public void setPost(Post post) {
+      this.post = post;
+    }
+    
+    public void setMapsActivity(MapsActivity mapsActivity) {
+      this.mapsActivity = mapsActivity;
+    }
+    
+    @NonNull
+    @Override
+    public Dialog onCreateDialog(Bundle savedInstanceState) {
+      AlertDialog.Builder builder = new AlertDialog.Builder(getActivity());
+      PostActionView view = new PostActionView(getContext());
+      view.setPost(post);
+      View inflatedView = view.inflate();
+      Log.d("MapsActivity", String.valueOf(post));
+      builder.setView(inflatedView);
+      inflatedView.findViewById(R.id.keepButton).setOnClickListener(new View.OnClickListener() {
+        @Override
+        public void onClick(View v) {
+          mapsActivity.keepPost(post);
+          dismiss();
+        }
+      });
+      return builder.create();
+    }
+    
+  }
+  
+  class MapsLocationCallback extends LocationCallback {
+    @Override
+    public void onLocationResult(LocationResult result) {
+      super.onLocationResult(result);
+      Log.d("MapsActivity", "location updated");
+      lastLocation = new LatLng(result.getLastLocation().getLatitude(), result.getLastLocation().getLongitude());
+    }
+    
+    @Override
+    public void onLocationAvailability(LocationAvailability availability) {
+      super.onLocationAvailability(availability);
+    }
   }
 }
