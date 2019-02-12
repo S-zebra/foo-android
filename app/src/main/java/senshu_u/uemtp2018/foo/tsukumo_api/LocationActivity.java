@@ -64,7 +64,7 @@ public abstract class LocationActivity extends AppCompatActivity {
       ActivityCompat.requestPermissions(this, new String[]{Manifest.permission.ACCESS_FINE_LOCATION}, permReqCode);
       return;
     }
-    requestLocationUpdates();
+//    requestLocationUpdates();
   }
   
   @Override

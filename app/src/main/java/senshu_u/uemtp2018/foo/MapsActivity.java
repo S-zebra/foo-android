@@ -118,8 +118,13 @@ public class MapsActivity extends LocationActivity implements OnMapReadyCallback
     super.onResume();
     heldPost = getKeptPost();
     Log.d("MapsActivity#onResume", String.valueOf(heldPost));
-    putButton.setVisibility(heldPost == null ? View.GONE : View.VISIBLE);
-    
+    if (heldPost != null) {
+      putButton.setVisibility(View.VISIBLE);
+      requestLocationUpdates();
+    } else {
+      putButton.setVisibility(View.GONE);
+      removeLocationUpdates();
+    }
   }
   
   private Post getKeptPost() {
@@ -233,12 +238,6 @@ public class MapsActivity extends LocationActivity implements OnMapReadyCallback
     
     Log.d(getClass().getSimpleName(), posts.toString());
     mClusterManager.addItems(posts);
-    
-    try {
-      getSupportFragmentManager().findFragmentById(R.id.map).getView().findViewById(2).performClick();
-    } catch (NullPointerException npe) {
-      npe.printStackTrace();
-    }
   }
   
   @Override

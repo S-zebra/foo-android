@@ -68,8 +68,6 @@ public class NewPostActivity extends LocationActivity implements PostSendCallbac
       inReplyToLabel.setText(getIntent().getStringExtra(PARENT_TEXT));
     }
   
-    setLocationCallback(locationCallback);
-  
     relocateButton = findViewById(R.id.relocateButton);
     relocateButton.setOnClickListener(new View.OnClickListener() {
       @Override
@@ -81,6 +79,8 @@ public class NewPostActivity extends LocationActivity implements PostSendCallbac
         startActivityForResult(i, RELOCATE_REQ_CODE);
       }
     });
+    setLocationCallback(locationCallback);
+    requestLocationUpdates();
   }
   
   @Override
