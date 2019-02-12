@@ -82,14 +82,17 @@ public abstract class LocationActivity extends AppCompatActivity {
   @Override
   protected void onResume() {
     super.onResume();
-    requestLocationUpdates();
+    if (startedUpdating) {
+      requestLocationUpdates();
+    }
   }
   
   protected void setLocationCallback(LocationCallback locationCallback) {
     locationClient.removeLocationUpdates(this.locationCallback);
     this.locationCallback = locationCallback;
     if (startedUpdating) {
-      locationClient.requestLocationUpdates(locationRequest, locationCallback, null);
+      Log.d("LocationActivity", "Update requested for " + this.locationCallback.toString());
+      locationClient.requestLocationUpdates(locationRequest, this.locationCallback, null);
     }
   }
   
@@ -102,12 +105,14 @@ public abstract class LocationActivity extends AppCompatActivity {
   }
   
   protected void requestLocationUpdates() {
-    this.locationClient.requestLocationUpdates(locationRequest, locationCallback, null);
+    Log.d("LocationActivity", "Update requested for " + this.locationCallback.toString());
+    this.locationClient.requestLocationUpdates(locationRequest, this.locationCallback, null);
     startedUpdating = true;
   }
   
   protected void removeLocationUpdates() {
-    this.locationClient.removeLocationUpdates(locationCallback);
+    Log.d("LocationActivity", "Update removed for " + this.locationCallback.toString());
+    this.locationClient.removeLocationUpdates(this.locationCallback);
     startedUpdating = false;
   }
   
