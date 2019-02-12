@@ -1,16 +1,15 @@
 package senshu_u.uemtp2018.foo;
 
-import android.Manifest;
+import android.annotation.SuppressLint;
 import android.app.AlertDialog;
 import android.app.Dialog;
 import android.app.ProgressDialog;
 import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.SharedPreferences;
-import android.content.pm.PackageManager;
 import android.net.Uri;
-import android.os.Build;
 import android.os.Bundle;
+import android.preference.PreferenceManager;
 import android.support.annotation.NonNull;
 import android.support.design.widget.FloatingActionButton;
 import android.support.v4.app.DialogFragment;
@@ -19,6 +18,7 @@ import android.util.Log;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
+import android.widget.Button;
 import android.widget.Toast;
 
 import com.google.android.gms.location.LocationAvailability;
@@ -32,19 +32,38 @@ import com.google.android.gms.maps.SupportMapFragment;
 import com.google.android.gms.maps.model.LatLng;
 import com.google.maps.android.clustering.ClusterManager;
 
+import org.json.JSONException;
+import org.json.JSONObject;
+
 import java.util.List;
 
-public class MapsActivity extends AppCompatActivity implements OnMapReadyCallback, PostsFetchCallback, AccountVerificationCallback {
-  
+import senshu_u.uemtp2018.foo.tsukumo_api.AccountVerificationCallback;
+import senshu_u.uemtp2018.foo.tsukumo_api.AccountVerifier;
+import senshu_u.uemtp2018.foo.tsukumo_api.LocationActivity;
+import senshu_u.uemtp2018.foo.tsukumo_api.LocationSendCallback;
+import senshu_u.uemtp2018.foo.tsukumo_api.LocationSender;
+import senshu_u.uemtp2018.foo.tsukumo_api.Post;
+import senshu_u.uemtp2018.foo.tsukumo_api.PostFetcher;
+import senshu_u.uemtp2018.foo.tsukumo_api.PostsFetchCallback;
+import senshu_u.uemtp2018.foo.tsukumo_api.TsukumoAPI;
+
+@SuppressLint ("MissingPermission")
+public class MapsActivity extends LocationActivity implements OnMapReadyCallback, PostsFetchCallback, AccountVerificationCallback, LocationSendCallback {
   private GoogleMap mMap;
   private ClusterManager<Post> mClusterManager;
   private FloatingActionButton fab;
   private SharedPreferences sharedPref;
   private Toolbar toolbar;
   private ProgressDialog mProgressDialog;
+  public static final String SP_KEPT_POST = "keptPost";
+  
   private final String LAST_LAT = "LAST_LAT";
   private final String LAST_LON = "LAST_LON";
   private final String LAST_ZOOM = "LAST_ZOOM";
+  private final MapsLocationCallback locationCallback = new MapsLocationCallback();
+  private Button putButton;
+  private Post heldPost;
+  private LatLng lastLocation;
   
   @Override
   protected void onCreate(Bundle savedInstanceState) {
@@ -53,12 +72,24 @@ public class MapsActivity extends AppCompatActivity implements OnMapReadyCallbac
     setTitle(R.string.app_name);
     
     // Obtain the SupportMapFragment and get notified when the map is ready to be used.
-    SupportMapFragment mapFragment = (SupportMapFragment) getSupportFragmentManager()
-      .findFragmentById(R.id.map);
+    SupportMapFragment mapFragment = (SupportMapFragment) getSupportFragmentManager().findFragmentById(R.id.map);
     mapFragment.getMapAsync(this);
   
+    sharedPref = PreferenceManager.getDefaultSharedPreferences(this);
+    
     toolbar = findViewById(R.id.mapToolBar);
     setSupportActionBar(toolbar);
+  
+    putButton = findViewById(R.id.putButton);
+    putButton.setOnClickListener(new View.OnClickListener() {
+      @Override
+      public void onClick(View v) {
+        if (lastLocation == null) return;
+        LocationSender sender = new LocationSender(MapsActivity.this, heldPost, sharedPref.getString(TsukumoAPI.TOKEN_KEY, ""));
+        sender.execute(lastLocation);
+        mProgressDialog = ProgressDialog.show(MapsActivity.this, "", getString(R.string.dialog_putting_post));
+      }
+    });
     
     fab = findViewById(R.id.floatingActionButton);
     fab.setOnClickListener(new View.OnClickListener() {
@@ -67,7 +98,7 @@ public class MapsActivity extends AppCompatActivity implements OnMapReadyCallbac
         startActivity(new Intent(MapsActivity.this, NewPostActivity.class));
       }
     });
-    sharedPref = getSharedPreferences(getPackageName(), MODE_PRIVATE);
+  
     Uri receivedUri = getIntent().getData();
     if (receivedUri != null) {
       String tempToken = receivedUri.getQueryParameter("token");
@@ -82,18 +113,29 @@ public class MapsActivity extends AppCompatActivity implements OnMapReadyCallbac
     setLocationCallback(locationCallback);
   }
   
-  private void showLoginDialog() {
-    new AlertDialog.Builder(this)
-      .setTitle(R.string.alert_login_title)
-      .setMessage(R.string.alert_login_body)
-      .setNegativeButton(R.string.later, null)
-      .setPositiveButton(R.string.login_now, new DialogInterface.OnClickListener() {
-        @Override
-        public void onClick(DialogInterface dialog, int which) {
-          Intent loginIntent = new Intent(Intent.ACTION_VIEW, Uri.parse(TsukumoAPI.SERVER_URL));
-          startActivity(loginIntent);
-        }
-      }).show();
+  @Override
+  protected void onResume() {
+    super.onResume();
+    heldPost = getKeptPost();
+    Log.d("MapsActivity#onResume", String.valueOf(heldPost));
+    putButton.setVisibility(heldPost == null ? View.GONE : View.VISIBLE);
+    
+  }
+  
+  private Post getKeptPost() {
+    String postJson = sharedPref.getString(SP_KEPT_POST, null);
+    if (postJson == null) {
+      Log.d("getKeptPost", "No post contained.");
+      return null;
+    }
+    try {
+      return Post.fromLocalJSON(new JSONObject(postJson));
+    } catch (JSONException jsone) {
+      Log.d("getKeptPost", postJson);
+      Log.e("getKeptPost", "Can\'t parse JSON, so removing invalid data", jsone);
+      sharedPref.edit().remove(SP_KEPT_POST).apply();
+      return null;
+    }
   }
   
   @Override
@@ -144,27 +186,39 @@ public class MapsActivity extends AppCompatActivity implements OnMapReadyCallbac
     fetchPosts();
   }
   
-  public static class PostActionDialogFragment extends DialogFragment {
-    private Post post;
-    
-    public Post getPost() {
-      return post;
+  private void showLoginDialog() {
+    new AlertDialog.Builder(this)
+      .setTitle(R.string.alert_login_title)
+      .setMessage(R.string.alert_login_body)
+      .setNegativeButton(R.string.later, null)
+      .setPositiveButton(R.string.login_now, new DialogInterface.OnClickListener() {
+        @Override
+        public void onClick(DialogInterface dialog, int which) {
+          Intent loginIntent = new Intent(Intent.ACTION_VIEW, Uri.parse(TsukumoAPI.SERVER_URL));
+          startActivity(loginIntent);
+        }
+      }).show();
+  }
+  
+  void fetchPosts() {
+    PostFetcher pf = new PostFetcher(this);
+    pf.params()
+      .limit(100)
+      .apply()
+      .execute();
+    mProgressDialog = ProgressDialog.show(this, "", getString(R.string.dialog_fetching_posts), true, true);
+  }
+  
+  public void keepPost(Post post) {
+    if (heldPost != null) {
+      Toast.makeText(this, "すでに投稿を持っています", Toast.LENGTH_SHORT).show();
+      return;
     }
-    
-    public void setPost(Post post) {
-      this.post = post;
-    }
-    
-    @NonNull
-    @Override
-    public Dialog onCreateDialog(Bundle savedInstanceState) {
-      AlertDialog.Builder builder = new AlertDialog.Builder(getActivity());
-      PostActionFragment fragment = new PostActionFragment(getContext());
-      Log.d("MapsActivity", String.valueOf(post));
-      fragment.setPost(post);
-      builder.setView(fragment.inflate());
-      return builder.create();
-    }
+    heldPost = post;
+    SharedPreferences.Editor ed = sharedPref.edit();
+    ed.putString(SP_KEPT_POST, post.toJSONString());
+    ed.apply();
+    putButton.setVisibility(View.VISIBLE);
   }
   
   @SuppressLint ("ResourceType")
