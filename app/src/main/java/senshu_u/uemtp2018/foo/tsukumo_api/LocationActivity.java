@@ -11,15 +11,12 @@ import android.support.annotation.Nullable;
 import android.support.v4.app.ActivityCompat;
 import android.support.v7.app.AppCompatActivity;
 import android.util.Log;
-import android.widget.Toast;
 
 import com.google.android.gms.location.FusedLocationProviderClient;
 import com.google.android.gms.location.LocationAvailability;
 import com.google.android.gms.location.LocationCallback;
 import com.google.android.gms.location.LocationRequest;
 import com.google.android.gms.location.LocationResult;
-
-import senshu_u.uemtp2018.foo.R;
 
 /**
  * Created by s-zebra on 2/11/19.
@@ -67,15 +64,21 @@ public abstract class LocationActivity extends AppCompatActivity {
 //    requestLocationUpdates();
   }
   
+  /**
+   * This method is called when location availability changed.
+   *
+   * @param allowed is location access allowed?
+   */
+  protected void onLocationAvailabilityChanged(boolean allowed) {
+    Log.d("LocationActivity", "Location access allowed: " + allowed);
+  }
+  
   @Override
   public void onRequestPermissionsResult(int requestCode, @NonNull String[] permissions, @NonNull int[] grantResults) {
     super.onRequestPermissionsResult(requestCode, permissions, grantResults);
     if (requestCode == permReqCode && permissions[0].equals(Manifest.permission.ACCESS_FINE_LOCATION)) {
-      if (grantResults[0] != PackageManager.PERMISSION_GRANTED) {
-        Toast.makeText(this, R.string.toast_location_denied, Toast.LENGTH_SHORT).show();
-      } else {
-        requestLocationUpdates();
-      }
+      boolean allowed = grantResults[0] == PackageManager.PERMISSION_GRANTED;
+      onLocationAvailabilityChanged(allowed);
     }
   }
   

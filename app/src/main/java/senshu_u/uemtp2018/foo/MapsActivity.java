@@ -173,7 +173,12 @@ public class MapsActivity extends LocationActivity implements OnMapReadyCallback
     LatLng lastPos = new LatLng(sharedPref.getFloat(LAST_LAT, 0), sharedPref.getFloat(LAST_LON, 0));
     CameraUpdate camUpdate = CameraUpdateFactory.newLatLngZoom(lastPos, sharedPref.getFloat(LAST_ZOOM, 0));
     mMap.moveCamera(camUpdate);
-    mMap.setMyLocationEnabled(true);
+    try {
+      mMap.setMyLocationEnabled(true);
+    } catch (SecurityException se) {
+      se.printStackTrace();
+      Toast.makeText(this, R.string.toast_location_denied, Toast.LENGTH_SHORT).show();
+    }
     mClusterManager = new ClusterManager<>(this, mMap);
     mClusterManager.setAnimation(false);
     mMap.setOnCameraIdleListener(mClusterManager);
@@ -189,6 +194,13 @@ public class MapsActivity extends LocationActivity implements OnMapReadyCallback
       }
     });
     fetchPosts();
+  }
+  
+  @Override
+  protected void onLocationAvailabilityChanged(boolean allowed) {
+    if (allowed) {
+      mMap.setMyLocationEnabled(true);
+    }
   }
   
   private void showLoginDialog() {
