@@ -30,6 +30,7 @@ import com.google.android.gms.maps.GoogleMap;
 import com.google.android.gms.maps.OnMapReadyCallback;
 import com.google.android.gms.maps.SupportMapFragment;
 import com.google.android.gms.maps.model.LatLng;
+import com.google.android.gms.maps.model.VisibleRegion;
 import com.google.maps.android.clustering.ClusterManager;
 
 import org.json.JSONException;
@@ -152,7 +153,6 @@ public class MapsActivity extends LocationActivity implements OnMapReadyCallback
   @Override
   public boolean onOptionsItemSelected(MenuItem item) {
     if (item.getItemId() == R.id.menuItem_refresh) {
-      if (mMap == null) return true;
       fetchPosts();
     }
     return true;
@@ -218,9 +218,15 @@ public class MapsActivity extends LocationActivity implements OnMapReadyCallback
   }
   
   void fetchPosts() {
+    if (mMap == null) return;
+    VisibleRegion vr = mMap.getProjection().getVisibleRegion();
+    LatLng ne = vr.latLngBounds.northeast;
+    LatLng sw = vr.latLngBounds.southwest;
+    Log.d("MapsActivity", "nw: " + ne.toString() + ", se: " + sw.toString());
     PostFetcher pf = new PostFetcher(this);
     pf.params()
       .limit(100)
+      .position(ne, sw)
       .apply()
       .execute();
     mProgressDialog = ProgressDialog.show(this, "", getString(R.string.dialog_fetching_posts), true, true);
@@ -246,8 +252,10 @@ public class MapsActivity extends LocationActivity implements OnMapReadyCallback
       Toast.makeText(this, R.string.toast_post_fetch_failed, Toast.LENGTH_SHORT).show();
       return;
     }
+  
     mClusterManager.clearItems();
-    
+  
+    Toast.makeText(this, posts.size() + " posts were found.", Toast.LENGTH_SHORT).show();
     Log.d(getClass().getSimpleName(), posts.toString());
     mClusterManager.addItems(posts);
   }

@@ -91,8 +91,26 @@ public class PostFetcher extends AsyncTask<Void, Void, List<Post>> {
       params.put("limit", Integer.toString(limit));
       return this;
     }
+  
+    public URIParamBuilder position(LatLng ne, LatLng sw) {
+      if (ne == null || sw == null) {
+        Log.e("PostFetcher", "nw or se is null");
+        return this;
+      }
+      //1: ne.lat, sw.lon
+      //2: sw.lat, ne.lon
+      params.put("lat1", Double.toString(ne.latitude));
+      params.put("lon1", Double.toString(sw.longitude));
+      params.put("lat2", Double.toString(sw.latitude));
+      params.put("lon2", Double.toString(ne.longitude));
+      return this;
+    }
     
     public URIParamBuilder position(LatLng position) {
+      if (position == null) {
+        Log.e("PostFetcher", "position is null");
+        return this;
+      }
       params.put("lat", Double.toString(position.latitude));
       params.put("lon", Double.toString(position.longitude));
       return this;
