@@ -67,6 +67,8 @@ public class PostActionView extends ConstraintLayout implements PostsFetchCallba
     if (post.getParentId() > 0) {
       postsList = v.findViewById(R.id.postsList);
       fetchParentPosts();
+      LayoutParams p = (LayoutParams) findViewById(R.id.mainPostCell).getLayoutParams();
+      p.setMargins(0, 1, 0, 0);
     }
     return v;
   }
