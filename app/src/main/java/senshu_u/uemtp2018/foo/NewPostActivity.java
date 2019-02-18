@@ -34,6 +34,8 @@ public class NewPostActivity extends LocationActivity implements PostSendCallbac
   public static final String TAG = NewPostActivity.class.getSimpleName();
   public static final String PARENT_ID = "parentID";
   public static final String PARENT_TEXT = "parentText";
+  public static final String NEW_POST = "newPost";
+  
   public static final int RELOCATE_REQ_CODE = 1;
   
   private TextView locationLabel;
@@ -46,6 +48,8 @@ public class NewPostActivity extends LocationActivity implements PostSendCallbac
   
   private TextView inReplyToHeader, inReplyToLabel;
   private ProgressDialog mProgressDialog;
+  public static final int RES_CODE_NEW_POST = 1;
+  private Post newPost;
   
   @Override
   protected void onCreate(Bundle savedInstanceState) {
@@ -111,7 +115,7 @@ public class NewPostActivity extends LocationActivity implements PostSendCallbac
       }
       String text = contentEditor.getText().toString();
       if (text.length() == 0) return true;
-      Post newPost = new Post(lastLocation.latitude, lastLocation.longitude, text);
+      newPost = new Post(lastLocation.latitude, lastLocation.longitude, text);
       if (parentID > 0) {
         newPost.setParentID(this.parentID);
       }
@@ -141,6 +145,9 @@ public class NewPostActivity extends LocationActivity implements PostSendCallbac
     mProgressDialog.dismiss();
     if (succeeded) {
       Toast.makeText(this, R.string.toast_post_sent, Toast.LENGTH_SHORT).show();
+      Intent resIntent = new Intent();
+      resIntent.putExtra(NEW_POST, newPost);
+      setResult(1, resIntent);
       finish();
     } else {
       Toast.makeText(this, R.string.toast_post_send_failed, Toast.LENGTH_SHORT).show();

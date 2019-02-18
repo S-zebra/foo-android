@@ -66,6 +66,8 @@ public class MapsActivity extends LocationActivity implements OnMapReadyCallback
   private Post heldPost;
   private LatLng lastLocation;
   
+  public static final int REQ_CODE_NEW_POST = 1;
+  
   @Override
   protected void onCreate(Bundle savedInstanceState) {
     super.onCreate(savedInstanceState);
@@ -96,7 +98,7 @@ public class MapsActivity extends LocationActivity implements OnMapReadyCallback
     fab.setOnClickListener(new View.OnClickListener() {
       @Override
       public void onClick(View v) {
-        startActivity(new Intent(MapsActivity.this, NewPostActivity.class));
+        startActivityForResult(new Intent(MapsActivity.this, NewPostActivity.class), 1);
       }
     });
   
@@ -156,6 +158,17 @@ public class MapsActivity extends LocationActivity implements OnMapReadyCallback
       fetchPosts();
     }
     return true;
+  }
+  
+  @Override
+  protected void onActivityResult(int requestCode, int resultCode, Intent data) {
+    super.onActivityResult(requestCode, resultCode, data);
+    if (requestCode == REQ_CODE_NEW_POST && resultCode == NewPostActivity.RES_CODE_NEW_POST) {
+      Post newPost = data.getParcelableExtra(NewPostActivity.NEW_POST);
+      if (newPost == null || mMap == null) return;
+      mClusterManager.addItem(newPost);
+      mClusterManager.cluster();
+    }
   }
   
   /**

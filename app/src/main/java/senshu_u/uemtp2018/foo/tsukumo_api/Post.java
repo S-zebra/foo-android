@@ -4,6 +4,9 @@ package senshu_u.uemtp2018.foo.tsukumo_api;
  * Created by s-zebra on 2/11/19.
  */
 
+import android.os.Parcel;
+import android.os.Parcelable;
+
 import com.google.android.gms.maps.model.LatLng;
 import com.google.maps.android.clustering.ClusterItem;
 
@@ -13,7 +16,7 @@ import org.json.JSONObject;
 /**
  * Foo用の投稿 (構造体)
  */
-public class Post implements ClusterItem {
+public class Post implements ClusterItem, Parcelable {
   private int ID, parentID;
   private LatLng position;
   private String text;
@@ -101,5 +104,38 @@ public class Post implements ClusterItem {
   @Override
   public String getSnippet() {
     return null;
+  }
+  
+  
+  public static final Creator<Post> CREATOR = new Creator<Post>() {
+    @Override
+    public Post createFromParcel(Parcel source) {
+      return new Post(source);
+    }
+    
+    @Override
+    public Post[] newArray(int size) {
+      return new Post[size];
+    }
+  };
+  
+  protected Post(Parcel in) {
+    this.ID = in.readInt();
+    this.parentID = in.readInt();
+    this.position = in.readParcelable(LatLng.class.getClassLoader());
+    this.text = in.readString();
+  }
+  
+  @Override
+  public int describeContents() {
+    return 0;
+  }
+  
+  @Override
+  public void writeToParcel(Parcel dest, int flags) {
+    dest.writeInt(this.ID);
+    dest.writeInt(this.parentID);
+    dest.writeParcelable(this.position, flags);
+    dest.writeString(this.text);
   }
 }
