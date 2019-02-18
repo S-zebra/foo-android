@@ -98,6 +98,14 @@ public class RelocateActivity extends AppCompatActivity implements OnMapReadyCal
       public void onCameraMove() {
         LatLng pos = mMap.getCameraPosition().target;
         mMarker.setPosition(pos);
+      }
+    });
+    mMap.setOnCameraIdleListener(new GoogleMap.OnCameraIdleListener() {
+      @Override
+      public void onCameraIdle() {
+        LatLng pos = mMarker.getPosition();
+        String addr = GeocoderUtil.getAddress(RelocateActivity.this, pos);
+        mMarker.setSnippet(addr);
         mMarker.hideInfoWindow();
         mMarker.setTitle(String.format("%.5f, %.5f", pos.latitude, pos.longitude));
         mMarker.showInfoWindow();
