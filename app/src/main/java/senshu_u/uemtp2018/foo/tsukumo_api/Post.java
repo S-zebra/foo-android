@@ -100,6 +100,6 @@ public class Post implements ClusterItem {
   
   @Override
   public String getSnippet() {
-    return "";
+    return null;
   }
 }

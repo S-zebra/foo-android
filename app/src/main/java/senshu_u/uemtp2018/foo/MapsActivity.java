@@ -254,10 +254,11 @@ public class MapsActivity extends LocationActivity implements OnMapReadyCallback
     }
   
     mClusterManager.clearItems();
-  
-    Toast.makeText(this, posts.size() + " posts were found.", Toast.LENGTH_SHORT).show();
+
+//    Toast.makeText(this, posts.size() + " posts were found.", Toast.LENGTH_SHORT).show();
     Log.d(getClass().getSimpleName(), posts.toString());
     mClusterManager.addItems(posts);
+    mClusterManager.cluster();
   }
   
   @Override
