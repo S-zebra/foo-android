@@ -23,6 +23,7 @@ public class RelocateActivity extends AppCompatActivity implements OnMapReadyCal
   private GoogleMap mMap;
   private Marker mMarker;
   private LatLng initialLocation;
+  private String markerId;
   
   @Override
   protected void onCreate(Bundle savedInstanceState) {
@@ -61,14 +62,18 @@ public class RelocateActivity extends AppCompatActivity implements OnMapReadyCal
         finish();
         break;
       case R.id.menuItem_done:
-        LatLng pos = mMarker.getPosition();
-        Intent resultIntent = new Intent();
-        resultIntent.putExtra(EXTRA_LOCATION, pos);
-        setResult(RESULT_CODE, resultIntent);
-        finish();
+        saveAndFinish();
         break;
     }
     return super.onOptionsItemSelected(item);
+  }
+  
+  private void saveAndFinish() {
+    LatLng pos = mMarker.getPosition();
+    Intent resultIntent = new Intent();
+    resultIntent.putExtra(EXTRA_LOCATION, pos);
+    setResult(RESULT_CODE, resultIntent);
+    finish();
   }
   
   /**
@@ -92,6 +97,7 @@ public class RelocateActivity extends AppCompatActivity implements OnMapReadyCal
     mMarker = mMap.addMarker(new MarkerOptions()
       .position(initialLocation)
       .draggable(true));
+    markerId = mMarker.getId();
     mMarker.showInfoWindow();
     mMap.setOnCameraMoveListener(new GoogleMap.OnCameraMoveListener() {
       @Override
@@ -100,6 +106,7 @@ public class RelocateActivity extends AppCompatActivity implements OnMapReadyCal
         mMarker.setPosition(pos);
       }
     });
+  
     mMap.setOnCameraIdleListener(new GoogleMap.OnCameraIdleListener() {
       @Override
       public void onCameraIdle() {
@@ -111,7 +118,14 @@ public class RelocateActivity extends AppCompatActivity implements OnMapReadyCal
         mMarker.showInfoWindow();
       }
     });
-    
+    mMap.setOnInfoWindowClickListener(new GoogleMap.OnInfoWindowClickListener() {
+      @Override
+      public void onInfoWindowClick(Marker marker) {
+        if (marker.getId().equals(markerId)) {
+          saveAndFinish();
+        }
+      }
+    });
   }
   
 }
