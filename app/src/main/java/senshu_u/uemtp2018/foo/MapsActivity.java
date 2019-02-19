@@ -41,7 +41,6 @@ import java.util.List;
 
 import senshu_u.uemtp2018.foo.tsukumo_api.AccountVerificationCallback;
 import senshu_u.uemtp2018.foo.tsukumo_api.AccountVerifier;
-import senshu_u.uemtp2018.foo.tsukumo_api.FetchParams;
 import senshu_u.uemtp2018.foo.tsukumo_api.LocationActivity;
 import senshu_u.uemtp2018.foo.tsukumo_api.LocationSendCallback;
 import senshu_u.uemtp2018.foo.tsukumo_api.LocationSender;
@@ -256,7 +255,7 @@ public class MapsActivity extends LocationActivity implements OnMapReadyCallback
     LatLng sw = vr.latLngBounds.southwest;
     Log.d("MapsActivity", "nw: " + ne.toString() + ", se: " + sw.toString());
     PostFetcher pf = new PostFetcher(this);
-    pf.params(new FetchParams()
+    pf.params(new PostFetcher.Parameters()
       .limit(100)
       .position(ne, sw))
       .execute();
