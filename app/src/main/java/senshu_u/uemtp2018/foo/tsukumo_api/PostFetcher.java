@@ -20,15 +20,15 @@ import java.util.List;
  * Created by s-zebra on 2/11/19.
  */
 public class PostFetcher extends AsyncTask<Void, Void, List<Post>> {
-  private WeakReference<PostsFetchCallback> apiListenerWeakReference;
+  private WeakReference<FetchCallback> apiListenerWeakReference;
   private String query = "";
   private int id;
   
-  public PostFetcher(PostsFetchCallback callback) {
+  public PostFetcher(FetchCallback callback) {
     this(-1, callback);
   }
   
-  public PostFetcher(int id, PostsFetchCallback callback) {
+  public PostFetcher(int id, FetchCallback callback) {
     this.apiListenerWeakReference = new WeakReference<>(callback);
     this.id = id;
   }
@@ -119,4 +119,7 @@ public class PostFetcher extends AsyncTask<Void, Void, List<Post>> {
     }
   }
   
+  public interface FetchCallback {
+    void onPostsFetched(List<Post> posts);
+  }
 }

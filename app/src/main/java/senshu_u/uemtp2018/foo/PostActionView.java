@@ -15,12 +15,11 @@ import java.util.List;
 
 import senshu_u.uemtp2018.foo.tsukumo_api.Post;
 import senshu_u.uemtp2018.foo.tsukumo_api.PostFetcher;
-import senshu_u.uemtp2018.foo.tsukumo_api.PostsFetchCallback;
 
 /**
  * Created by s-zebra on 2/2/19.
  */
-public class PostActionView extends ConstraintLayout implements PostsFetchCallback {
+public class PostActionView extends ConstraintLayout implements PostFetcher.FetchCallback {
   public static final String TAG = PostActionView.class.getSimpleName();
   
   private Post post;

@@ -16,11 +16,11 @@ import java.lang.ref.WeakReference;
  * Created by s-zebra on 2/11/19.
  */
 public class LocationSender extends AsyncTask<LatLng, Void, Boolean> {
-  private WeakReference<LocationSendCallback> callbackWR;
+  private WeakReference<SendCallback> callbackWR;
   private Post post;
   private String token;
   
-  public LocationSender(LocationSendCallback callback, @NonNull Post post, @NonNull String token) {
+  public LocationSender(SendCallback callback, @NonNull Post post, @NonNull String token) {
     this.callbackWR = new WeakReference<>(callback);
     this.post = post;
     this.token = token;
@@ -53,5 +53,9 @@ public class LocationSender extends AsyncTask<LatLng, Void, Boolean> {
     super.onPostExecute(aBoolean);
     Log.d("LocationSender", "PostExecute: " + aBoolean);
     callbackWR.get().onLocationSent(aBoolean);
+  }
+  
+  public interface SendCallback {
+    void onLocationSent(boolean success);
   }
 }

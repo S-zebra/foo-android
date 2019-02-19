@@ -25,12 +25,11 @@ import java.util.List;
 
 import senshu_u.uemtp2018.foo.tsukumo_api.LocationActivity;
 import senshu_u.uemtp2018.foo.tsukumo_api.Post;
-import senshu_u.uemtp2018.foo.tsukumo_api.PostSendCallback;
 import senshu_u.uemtp2018.foo.tsukumo_api.PostSender;
 import senshu_u.uemtp2018.foo.tsukumo_api.TsukumoAPI;
 
 
-public class NewPostActivity extends LocationActivity implements PostSendCallback {
+public class NewPostActivity extends LocationActivity implements PostSender.SendCallback {
   public static final String TAG = NewPostActivity.class.getSimpleName();
   public static final String PARENT_ID = "parentID";
   public static final String PARENT_TEXT = "parentText";

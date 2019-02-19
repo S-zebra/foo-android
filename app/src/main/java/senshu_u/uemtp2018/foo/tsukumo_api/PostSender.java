@@ -12,10 +12,10 @@ import java.lang.ref.WeakReference;
  * Created by s-zebra on 2/11/19.
  */
 public class PostSender extends AsyncTask<Post, Void, Boolean> {
-  private WeakReference<PostSendCallback> callback;
+  private WeakReference<SendCallback> callback;
   private String token;
   
-  public PostSender(PostSendCallback callback, @NonNull String token) {
+  public PostSender(SendCallback callback, @NonNull String token) {
     this.callback = new WeakReference<>(callback);
     this.token = token;
   }
@@ -39,5 +39,14 @@ public class PostSender extends AsyncTask<Post, Void, Boolean> {
   @Override
   protected void onPostExecute(Boolean aBoolean) {
     callback.get().onSendTaskComplete(aBoolean);
+  }
+  
+  public interface SendCallback {
+    /**
+     * 送信タスク完了時に呼び出される
+     *
+     * @param succeeded 送信完了時はtrue、そうでなければfalse
+     */
+    void onSendTaskComplete(boolean succeeded);
   }
 }

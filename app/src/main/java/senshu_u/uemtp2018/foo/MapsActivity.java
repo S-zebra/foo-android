@@ -39,18 +39,15 @@ import org.json.JSONObject;
 
 import java.util.List;
 
-import senshu_u.uemtp2018.foo.tsukumo_api.AccountVerificationCallback;
 import senshu_u.uemtp2018.foo.tsukumo_api.AccountVerifier;
 import senshu_u.uemtp2018.foo.tsukumo_api.LocationActivity;
-import senshu_u.uemtp2018.foo.tsukumo_api.LocationSendCallback;
 import senshu_u.uemtp2018.foo.tsukumo_api.LocationSender;
 import senshu_u.uemtp2018.foo.tsukumo_api.Post;
 import senshu_u.uemtp2018.foo.tsukumo_api.PostFetcher;
-import senshu_u.uemtp2018.foo.tsukumo_api.PostsFetchCallback;
 import senshu_u.uemtp2018.foo.tsukumo_api.TsukumoAPI;
 
 @SuppressLint ("MissingPermission")
-public class MapsActivity extends LocationActivity implements OnMapReadyCallback, PostsFetchCallback, AccountVerificationCallback, LocationSendCallback {
+public class MapsActivity extends LocationActivity implements OnMapReadyCallback, PostFetcher.FetchCallback, AccountVerifier.VerificationCallback, LocationSender.SendCallback {
   private GoogleMap mMap;
   private ClusterManager<Post> mClusterManager;
   private FloatingActionButton fab;

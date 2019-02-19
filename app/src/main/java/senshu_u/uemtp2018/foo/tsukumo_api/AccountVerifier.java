@@ -13,10 +13,10 @@ import java.lang.ref.WeakReference;
  */
 public class AccountVerifier extends AsyncTask<String, Void, Boolean> {
   
-  private WeakReference<AccountVerificationCallback> callback;
+  private WeakReference<VerificationCallback> callback;
   private String token;
   
-  public AccountVerifier(AccountVerificationCallback callback) {
+  public AccountVerifier(VerificationCallback callback) {
     this.callback = new WeakReference<>(callback);
   }
   
@@ -37,6 +37,10 @@ public class AccountVerifier extends AsyncTask<String, Void, Boolean> {
   @Override
   protected void onPostExecute(Boolean aBoolean) {
     callback.get().onAccountVerified(token, aBoolean);
+  }
+  
+  public interface VerificationCallback {
+    void onAccountVerified(String token, boolean valid);
   }
   
 }
