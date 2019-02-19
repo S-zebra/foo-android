@@ -2,7 +2,6 @@ package senshu_u.uemtp2018.foo;
 
 import android.annotation.SuppressLint;
 import android.app.AlertDialog;
-import android.app.Dialog;
 import android.app.ProgressDialog;
 import android.content.DialogInterface;
 import android.content.Intent;
@@ -10,10 +9,8 @@ import android.content.SharedPreferences;
 import android.net.Uri;
 import android.os.Bundle;
 import android.preference.PreferenceManager;
-import android.support.annotation.NonNull;
 import android.support.constraint.ConstraintLayout;
 import android.support.design.widget.FloatingActionButton;
-import android.support.v4.app.DialogFragment;
 import android.support.v7.widget.Toolbar;
 import android.util.Log;
 import android.view.Menu;
@@ -321,43 +318,6 @@ public class MapsActivity extends LocationActivity implements OnMapReadyCallback
       .putFloat(LAST_LON, (float) camPos.longitude)
       .putFloat(LAST_ZOOM, mMap.getCameraPosition().zoom)
       .apply();
-  }
-  
-  public static class PostActionDialogFragment extends DialogFragment {
-    private Post post;
-    private MapsActivity mapsActivity;
-    
-    public Post getPost() {
-      return post;
-    }
-    
-    public void setPost(Post post) {
-      this.post = post;
-    }
-    
-    public void setMapsActivity(MapsActivity mapsActivity) {
-      this.mapsActivity = mapsActivity;
-    }
-    
-    @NonNull
-    @Override
-    public Dialog onCreateDialog(Bundle savedInstanceState) {
-      AlertDialog.Builder builder = new AlertDialog.Builder(getActivity());
-      PostActionView view = new PostActionView(getContext());
-      view.setPost(post);
-      View inflatedView = view.inflate();
-      Log.d("MapsActivity", String.valueOf(post));
-      builder.setView(inflatedView);
-      inflatedView.findViewById(R.id.keepButton).setOnClickListener(new View.OnClickListener() {
-        @Override
-        public void onClick(View v) {
-          mapsActivity.keepPost(post);
-          dismiss();
-        }
-      });
-      return builder.create();
-    }
-    
   }
   
   class MapsLocationCallback extends LocationCallback {

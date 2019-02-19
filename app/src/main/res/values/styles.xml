@@ -17,5 +17,5 @@
     <item name="android:windowBackground">@android:color/transparent</item>
   </style>
 
-  <color name="welcomeBackground">#d2d2d2</color>
+  <color name="welcomeBackground">#D2D2D2</color>
 </resources>
