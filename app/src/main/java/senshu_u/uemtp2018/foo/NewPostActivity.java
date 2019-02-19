@@ -23,7 +23,6 @@ import com.google.android.gms.maps.model.LatLng;
 import java.io.IOException;
 import java.util.List;
 
-import senshu_u.uemtp2018.foo.tsukumo_api.LocationActivity;
 import senshu_u.uemtp2018.foo.tsukumo_api.Post;
 import senshu_u.uemtp2018.foo.tsukumo_api.PostSender;
 import senshu_u.uemtp2018.foo.tsukumo_api.TsukumoAPI;

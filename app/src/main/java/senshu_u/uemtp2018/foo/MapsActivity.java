@@ -37,7 +37,6 @@ import org.json.JSONObject;
 import java.util.List;
 
 import senshu_u.uemtp2018.foo.tsukumo_api.AccountVerifier;
-import senshu_u.uemtp2018.foo.tsukumo_api.LocationActivity;
 import senshu_u.uemtp2018.foo.tsukumo_api.LocationSender;
 import senshu_u.uemtp2018.foo.tsukumo_api.Post;
 import senshu_u.uemtp2018.foo.tsukumo_api.PostFetcher;

@@ -1,4 +1,4 @@
-package senshu_u.uemtp2018.foo.tsukumo_api;
+package senshu_u.uemtp2018.foo;
 
 import android.Manifest;
 import android.annotation.SuppressLint;
