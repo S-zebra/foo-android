@@ -11,6 +11,7 @@ import android.net.Uri;
 import android.os.Bundle;
 import android.preference.PreferenceManager;
 import android.support.annotation.NonNull;
+import android.support.constraint.ConstraintLayout;
 import android.support.design.widget.FloatingActionButton;
 import android.support.v4.app.DialogFragment;
 import android.support.v7.widget.Toolbar;
@@ -207,6 +208,23 @@ public class MapsActivity extends LocationActivity implements OnMapReadyCallback
         f.show(getSupportFragmentManager(), "");
       }
     });
+    mClusterManager.setOnClusterItemClickListener(new ClusterManager.OnClusterItemClickListener<Post>() {
+      @Override
+      public boolean onClusterItemClick(Post post) {
+        ConstraintLayout.LayoutParams params = (ConstraintLayout.LayoutParams) fab.getLayoutParams();
+        float d = getResources().getDisplayMetrics().density;
+        params.bottomMargin = (int) (64 * d);
+        return false;
+      }
+    });
+    mMap.setOnMapClickListener(new GoogleMap.OnMapClickListener() {
+      @Override
+      public void onMapClick(LatLng lng) {
+        ConstraintLayout.LayoutParams params = (ConstraintLayout.LayoutParams) fab.getLayoutParams();
+        float d = getResources().getDisplayMetrics().density;
+        params.bottomMargin = (int) (16 * d);
+      }
+    });
     fetchPosts();
   }
   
@@ -265,7 +283,6 @@ public class MapsActivity extends LocationActivity implements OnMapReadyCallback
       Toast.makeText(this, R.string.toast_post_fetch_failed, Toast.LENGTH_SHORT).show();
       return;
     }
-  
     mClusterManager.clearItems();
 
 //    Toast.makeText(this, posts.size() + " posts were found.", Toast.LENGTH_SHORT).show();
