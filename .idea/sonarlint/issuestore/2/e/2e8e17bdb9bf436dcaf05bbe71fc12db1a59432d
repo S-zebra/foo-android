@@ -1,0 +1,12 @@
+
+isquid:S1192‚"LDefine a constant instead of duplicating this literal "getKeptPost" 3 times.(ÇêÛÿÿÿÿÿ
+;squid:S1148º"#Use a logger to log this exception.(¸ß¹
+msquid:S14503"VRemove the "toolbar" field and declare it as a local variable in the relevant methods.(ş®º—
+=squid:S11707"!Make this final field static too.(ÿí‡úıÿÿÿÿ
+8squid:S11708"!Make this final field static too.(–³¬õ
+8squid:S11709"!Make this final field static too.(ö¢¬¾
+psquid:S001167"SRename this field "LAST_LAT" to match the regular expression '^[a-z][a-zA-Z0-9]*$'.(ÿí‡úıÿÿÿÿ
+ksquid:S001168"SRename this field "LAST_LON" to match the regular expression '^[a-z][a-zA-Z0-9]*$'.(–³¬õ
+lsquid:S001169"TRename this field "LAST_ZOOM" to match the regular expression '^[a-z][a-zA-Z0-9]*$'.(ö¢¬¾
+@squid:S1185Ë"(Remove this method to simply inherit it.(È•ªú
+hsquid:CommentedOutCodeLine˜"<This block of commented-out lines of code should be removed.(öğ÷‰ùÿÿÿÿ
