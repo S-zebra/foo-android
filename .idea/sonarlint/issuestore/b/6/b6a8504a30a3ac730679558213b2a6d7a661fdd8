@@ -1,0 +1,7 @@
+
+Psquid:S3516k"9Refactor this method to not always return the same value.(ñ”Ò
+@squid:S1148ˆ"#Use a logger to log this exception.(€ÉÔ…ıÿÿÿÿ
+Csquid:S1659/",Declare "inReplyToLabel" on a separate line.(ÿÑŸ
+ysquid:S1450*"]Remove the "relocateButton" field and declare it as a local variable in the relevant methods.(ò“Õˆıÿÿÿÿ
+usquid:S1450/"^Remove the "inReplyToHeader" field and declare it as a local variable in the relevant methods.(ÿÑŸ
+tsquid:S1450/"]Remove the "inReplyToLabel" field and declare it as a local variable in the relevant methods.(ÿÑŸ

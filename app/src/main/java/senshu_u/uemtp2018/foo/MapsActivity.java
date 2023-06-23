@@ -1,50 +1,66 @@
 package senshu_u.uemtp2018.foo;
 
-import android.Manifest;
+import android.annotation.SuppressLint;
 import android.app.AlertDialog;
-import android.app.Dialog;
 import android.app.ProgressDialog;
 import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.SharedPreferences;
-import android.content.pm.PackageManager;
 import android.net.Uri;
-import android.os.Build;
 import android.os.Bundle;
-import android.support.annotation.NonNull;
+import android.preference.PreferenceManager;
+import android.support.constraint.ConstraintLayout;
 import android.support.design.widget.FloatingActionButton;
-import android.support.v4.app.DialogFragment;
-import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.Toolbar;
 import android.util.Log;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
+import android.widget.Button;
 import android.widget.Toast;
 
+import com.google.android.gms.location.LocationAvailability;
+import com.google.android.gms.location.LocationCallback;
+import com.google.android.gms.location.LocationResult;
 import com.google.android.gms.maps.CameraUpdate;
 import com.google.android.gms.maps.CameraUpdateFactory;
 import com.google.android.gms.maps.GoogleMap;
 import com.google.android.gms.maps.OnMapReadyCallback;
 import com.google.android.gms.maps.SupportMapFragment;
 import com.google.android.gms.maps.model.LatLng;
+import com.google.android.gms.maps.model.VisibleRegion;
 import com.google.maps.android.clustering.ClusterManager;
+
+import org.json.JSONException;
+import org.json.JSONObject;
 
 import java.util.List;
 
-public class MapsActivity extends AppCompatActivity implements OnMapReadyCallback, PostsFetchCallback, AccountVerificationCallback {
-  
+import senshu_u.uemtp2018.foo.tsukumo_api.AccountVerifier;
+import senshu_u.uemtp2018.foo.tsukumo_api.LocationSender;
+import senshu_u.uemtp2018.foo.tsukumo_api.Post;
+import senshu_u.uemtp2018.foo.tsukumo_api.PostFetcher;
+import senshu_u.uemtp2018.foo.tsukumo_api.TsukumoAPI;
+
+@SuppressLint ("MissingPermission")
+public class MapsActivity extends LocationActivity implements OnMapReadyCallback, PostFetcher.FetchCallback, AccountVerifier.VerificationCallback, LocationSender.SendCallback {
   private GoogleMap mMap;
   private ClusterManager<Post> mClusterManager;
   private FloatingActionButton fab;
-  private final int LOCATION_REQ_CODE = 1;
-  private String tempToken;
   private SharedPreferences sharedPref;
   private Toolbar toolbar;
   private ProgressDialog mProgressDialog;
+  public static final String SP_KEPT_POST = "keptPost";
+  
   private final String LAST_LAT = "LAST_LAT";
   private final String LAST_LON = "LAST_LON";
   private final String LAST_ZOOM = "LAST_ZOOM";
+  private final MapsLocationCallback locationCallback = new MapsLocationCallback();
+  private Button putButton;
+  private Post heldPost;
+  private LatLng lastLocation;
+  
+  public static final int REQ_CODE_NEW_POST = 1;
   
   @Override
   protected void onCreate(Bundle savedInstanceState) {
@@ -53,24 +69,36 @@ public class MapsActivity extends AppCompatActivity implements OnMapReadyCallbac
     setTitle(R.string.app_name);
     
     // Obtain the SupportMapFragment and get notified when the map is ready to be used.
-    SupportMapFragment mapFragment = (SupportMapFragment) getSupportFragmentManager()
-      .findFragmentById(R.id.map);
+    SupportMapFragment mapFragment = (SupportMapFragment) getSupportFragmentManager().findFragmentById(R.id.map);
     mapFragment.getMapAsync(this);
   
+    sharedPref = PreferenceManager.getDefaultSharedPreferences(this);
+    
     toolbar = findViewById(R.id.mapToolBar);
     setSupportActionBar(toolbar);
+  
+    putButton = findViewById(R.id.putButton);
+    putButton.setOnClickListener(new View.OnClickListener() {
+      @Override
+      public void onClick(View v) {
+        if (lastLocation == null) return;
+        LocationSender sender = new LocationSender(MapsActivity.this, heldPost, sharedPref.getString(TsukumoAPI.TOKEN_KEY, ""));
+        sender.execute(lastLocation);
+        mProgressDialog = ProgressDialog.show(MapsActivity.this, "", getString(R.string.dialog_putting_post));
+      }
+    });
     
     fab = findViewById(R.id.floatingActionButton);
     fab.setOnClickListener(new View.OnClickListener() {
       @Override
       public void onClick(View v) {
-        startActivity(new Intent(MapsActivity.this, NewPostActivity.class));
+        startActivityForResult(new Intent(MapsActivity.this, NewPostActivity.class), 1);
       }
     });
-    sharedPref = getSharedPreferences(getPackageName(), MODE_PRIVATE);
+  
     Uri receivedUri = getIntent().getData();
     if (receivedUri != null) {
-      tempToken = receivedUri.getQueryParameter("token");
+      String tempToken = receivedUri.getQueryParameter("token");
       new AccountVerifier(this).execute(tempToken);
     } else {
       String savedToken = sharedPref.getString(TsukumoAPI.TOKEN_KEY, null);
@@ -78,20 +106,38 @@ public class MapsActivity extends AppCompatActivity implements OnMapReadyCallbac
         showLoginDialog();
       }
     }
+  
+    setLocationCallback(locationCallback);
   }
   
-  private void showLoginDialog() {
-    new AlertDialog.Builder(this)
-      .setTitle(R.string.alert_login_title)
-      .setMessage(R.string.alert_login_body)
-      .setNegativeButton(R.string.later, null)
-      .setPositiveButton(R.string.login_now, new DialogInterface.OnClickListener() {
-        @Override
-        public void onClick(DialogInterface dialog, int which) {
-          Intent loginIntent = new Intent(Intent.ACTION_VIEW, Uri.parse(TsukumoAPI.SERVER_URL));
-          startActivity(loginIntent);
-        }
-      }).show();
+  @Override
+  protected void onResume() {
+    super.onResume();
+    heldPost = getKeptPost();
+    Log.d("MapsActivity#onResume", String.valueOf(heldPost));
+    if (heldPost != null) {
+      putButton.setVisibility(View.VISIBLE);
+      requestLocationUpdates();
+    } else {
+      putButton.setVisibility(View.GONE);
+      removeLocationUpdates();
+    }
+  }
+  
+  private Post getKeptPost() {
+    String postJson = sharedPref.getString(SP_KEPT_POST, null);
+    if (postJson == null) {
+      Log.d("getKeptPost", "No post contained.");
+      return null;
+    }
+    try {
+      return Post.fromLocalJSON(new JSONObject(postJson));
+    } catch (JSONException jsone) {
+      Log.d("getKeptPost", postJson);
+      Log.e("getKeptPost", "Can\'t parse JSON, so removing invalid data", jsone);
+      sharedPref.edit().remove(SP_KEPT_POST).apply();
+      return null;
+    }
   }
   
   @Override
@@ -103,34 +149,20 @@ public class MapsActivity extends AppCompatActivity implements OnMapReadyCallbac
   @Override
   public boolean onOptionsItemSelected(MenuItem item) {
     if (item.getItemId() == R.id.menuItem_refresh) {
-      if (mMap == null) return true;
       fetchPosts();
     }
     return true;
   }
   
   @Override
-  public void onRequestPermissionsResult(int requestCode, @NonNull String[] permissions, @NonNull int[] grantResults) {
-    super.onRequestPermissionsResult(requestCode, permissions, grantResults);
-    if (permissions[0].equals(Manifest.permission.ACCESS_FINE_LOCATION) &&
-      grantResults[0] != PackageManager.PERMISSION_GRANTED) {
-      Toast.makeText(this, R.string.toast_location_denied, Toast.LENGTH_SHORT).show();
-    } else {
-      if (mMap != null) {
-        mMap.setMyLocationEnabled(true);
-      }
-//      mLocationManager = (LocationManager) getSystemService(LOCATION_SERVICE);
-//      mLocationManager.requestLocationUpdates(LocationManager.GPS_PROVIDER, 500, 0, this);
+  protected void onActivityResult(int requestCode, int resultCode, Intent data) {
+    super.onActivityResult(requestCode, resultCode, data);
+    if (requestCode == REQ_CODE_NEW_POST && resultCode == NewPostActivity.RES_CODE_NEW_POST) {
+      Post newPost = data.getParcelableExtra(NewPostActivity.NEW_POST);
+      if (newPost == null || mMap == null) return;
+      mClusterManager.addItem(newPost);
+      mClusterManager.cluster();
     }
-  }
-  
-  void fetchPosts() {
-    PostFetcher pf = new PostFetcher(this);
-    pf.params()
-      .limit(100)
-      .apply()
-      .execute();
-    mProgressDialog = ProgressDialog.show(this, "", getString(R.string.dialog_fetching_posts), true, true);
   }
   
   /**
@@ -148,14 +180,11 @@ public class MapsActivity extends AppCompatActivity implements OnMapReadyCallbac
     LatLng lastPos = new LatLng(sharedPref.getFloat(LAST_LAT, 0), sharedPref.getFloat(LAST_LON, 0));
     CameraUpdate camUpdate = CameraUpdateFactory.newLatLngZoom(lastPos, sharedPref.getFloat(LAST_ZOOM, 0));
     mMap.moveCamera(camUpdate);
-    if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
-      if (checkSelfPermission(Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED) {
-        requestPermissions(new String[]{Manifest.permission.ACCESS_FINE_LOCATION}, LOCATION_REQ_CODE);
-      } else {
-        mMap.setMyLocationEnabled(true);
-      }
-    } else {
+    try {
       mMap.setMyLocationEnabled(true);
+    } catch (SecurityException se) {
+      se.printStackTrace();
+      Toast.makeText(this, R.string.toast_location_denied, Toast.LENGTH_SHORT).show();
     }
     mClusterManager = new ClusterManager<>(this, mMap);
     mClusterManager.setAnimation(false);
@@ -167,64 +196,114 @@ public class MapsActivity extends AppCompatActivity implements OnMapReadyCallbac
       public void onClusterItemInfoWindowClick(Post post) {
         PostActionDialogFragment f = new PostActionDialogFragment();
         f.setPost(post);
+        f.setMapsActivity(MapsActivity.this);
         f.show(getSupportFragmentManager(), "");
       }
     });
-    
+    mClusterManager.setOnClusterItemClickListener(new ClusterManager.OnClusterItemClickListener<Post>() {
+      @Override
+      public boolean onClusterItemClick(Post post) {
+        ConstraintLayout.LayoutParams params = (ConstraintLayout.LayoutParams) fab.getLayoutParams();
+        float d = getResources().getDisplayMetrics().density;
+        params.bottomMargin = (int) (64 * d);
+        return false;
+      }
+    });
+    mMap.setOnMapClickListener(new GoogleMap.OnMapClickListener() {
+      @Override
+      public void onMapClick(LatLng lng) {
+        ConstraintLayout.LayoutParams params = (ConstraintLayout.LayoutParams) fab.getLayoutParams();
+        float d = getResources().getDisplayMetrics().density;
+        params.bottomMargin = (int) (16 * d);
+      }
+    });
     fetchPosts();
   }
   
-  public static class PostActionDialogFragment extends DialogFragment {
-    private Post post;
-    
-    public Post getPost() {
-      return post;
-    }
-    
-    public void setPost(Post post) {
-      this.post = post;
-    }
-    
-    @NonNull
-    @Override
-    public Dialog onCreateDialog(Bundle savedInstanceState) {
-      AlertDialog.Builder builder = new AlertDialog.Builder(getActivity());
-      PostActionFragment fragment = new PostActionFragment(getContext());
-      Log.d("MapsActivity", post.toString());
-      fragment.setPost(post);
-      builder.setView(fragment.inflate());
-      return builder.create();
+  @Override
+  protected void onLocationAvailabilityChanged(boolean allowed) {
+    if (allowed) {
+      mMap.setMyLocationEnabled(true);
     }
   }
   
+  private void showLoginDialog() {
+    new AlertDialog.Builder(this)
+      .setTitle(R.string.alert_login_title)
+      .setMessage(R.string.alert_login_body)
+      .setNegativeButton(R.string.later, null)
+      .setPositiveButton(R.string.login_now, new DialogInterface.OnClickListener() {
+        @Override
+        public void onClick(DialogInterface dialog, int which) {
+          Intent loginIntent = new Intent(Intent.ACTION_VIEW, Uri.parse(TsukumoAPI.SERVER_URL));
+          startActivity(loginIntent);
+        }
+      }).show();
+  }
+  
+  void fetchPosts() {
+    if (mMap == null) return;
+    VisibleRegion vr = mMap.getProjection().getVisibleRegion();
+    LatLng ne = vr.latLngBounds.northeast;
+    LatLng sw = vr.latLngBounds.southwest;
+    Log.d("MapsActivity", "nw: " + ne.toString() + ", se: " + sw.toString());
+    PostFetcher pf = new PostFetcher(this);
+    pf.params(new PostFetcher.Parameters()
+      .limit(100)
+      .position(ne, sw))
+      .execute();
+    mProgressDialog = ProgressDialog.show(this, "", getString(R.string.dialog_fetching_posts), true, true);
+  }
+  
+  public void keepPost(Post post) {
+    if (heldPost != null) {
+      Toast.makeText(this, "すでに投稿を持っています", Toast.LENGTH_SHORT).show();
+      return;
+    }
+    heldPost = post;
+    SharedPreferences.Editor ed = sharedPref.edit();
+    ed.putString(SP_KEPT_POST, post.toJSONString());
+    ed.apply();
+    putButton.setVisibility(View.VISIBLE);
+  }
+  
+  @SuppressLint ("ResourceType")
   @Override
   public void onPostsFetched(List<Post> posts) {
+    mProgressDialog.dismiss();
     if (posts == null) {
       Toast.makeText(this, R.string.toast_post_fetch_failed, Toast.LENGTH_SHORT).show();
       return;
     }
     mClusterManager.clearItems();
-  
+
+//    Toast.makeText(this, posts.size() + " posts were found.", Toast.LENGTH_SHORT).show();
     Log.d(getClass().getSimpleName(), posts.toString());
     mClusterManager.addItems(posts);
+    mClusterManager.cluster();
+  }
   
-    mProgressDialog.dismiss();
-    try {
-      getSupportFragmentManager().findFragmentById(R.id.map).getView().findViewById(2).performClick();
-    } catch (NullPointerException npe) {
-      npe.printStackTrace();
+  @Override
+  public void onAccountVerified(String token, boolean valid) {
+    if (valid) {
+      Toast.makeText(this, R.string.toast_login_success, Toast.LENGTH_SHORT).show();
+      sharedPref.edit()
+        .putString(TsukumoAPI.TOKEN_KEY, token)
+        .apply();
+    } else {
+      Toast.makeText(this, R.string.toast_login_failure, Toast.LENGTH_SHORT).show();
     }
   }
   
   @Override
-  public void onVerificationTaskComplete(boolean isValid) {
-    if (isValid) {
-      Toast.makeText(this, R.string.toast_login_success, Toast.LENGTH_SHORT).show();
-      SharedPreferences.Editor editor = sharedPref.edit();
-      editor.putString(TsukumoAPI.TOKEN_KEY, tempToken);
-      editor.apply();
-    } else {
-      Toast.makeText(this, R.string.toast_login_failure, Toast.LENGTH_SHORT).show();
+  public void onLocationSent(boolean success) {
+    mProgressDialog.dismiss();
+    Toast.makeText(MapsActivity.this, success ? R.string.toast_post_put_success : R.string.toast_post_put_failed, Toast.LENGTH_SHORT).show();
+    if (success) {
+      sharedPref.edit()
+        .remove(SP_KEPT_POST)
+        .apply();
+      putButton.setVisibility(View.GONE);
     }
   }
   
@@ -232,11 +311,25 @@ public class MapsActivity extends AppCompatActivity implements OnMapReadyCallbac
   protected void onPause() {
     super.onPause();
     if (mMap == null) return;
-    SharedPreferences.Editor editor = sharedPref.edit();
     LatLng camPos = mMap.getCameraPosition().target;
-    editor.putFloat(LAST_LAT, (float) camPos.latitude);
-    editor.putFloat(LAST_LON, (float) camPos.longitude);
-    editor.putFloat(LAST_ZOOM, mMap.getCameraPosition().zoom);
-    editor.apply();
+    sharedPref.edit()
+      .putFloat(LAST_LAT, (float) camPos.latitude)
+      .putFloat(LAST_LON, (float) camPos.longitude)
+      .putFloat(LAST_ZOOM, mMap.getCameraPosition().zoom)
+      .apply();
+  }
+  
+  class MapsLocationCallback extends LocationCallback {
+    @Override
+    public void onLocationResult(LocationResult result) {
+      super.onLocationResult(result);
+      Log.d("MapsActivity", "location updated");
+      lastLocation = new LatLng(result.getLastLocation().getLatitude(), result.getLastLocation().getLongitude());
+    }
+    
+    @Override
+    public void onLocationAvailability(LocationAvailability availability) {
+      super.onLocationAvailability(availability);
+    }
   }
 }

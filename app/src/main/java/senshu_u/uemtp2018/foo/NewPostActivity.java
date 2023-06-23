@@ -1,17 +1,11 @@
 package senshu_u.uemtp2018.foo;
 
-import android.Manifest;
 import android.app.ProgressDialog;
-import android.content.Context;
 import android.content.Intent;
-import android.content.pm.PackageManager;
 import android.location.Address;
 import android.location.Geocoder;
-import android.os.Build;
 import android.os.Bundle;
-import android.support.annotation.NonNull;
-import android.support.v4.app.ActivityCompat;
-import android.support.v7.app.AppCompatActivity;
+import android.preference.PreferenceManager;
 import android.support.v7.widget.Toolbar;
 import android.util.Log;
 import android.view.Menu;
@@ -22,24 +16,26 @@ import android.widget.EditText;
 import android.widget.TextView;
 import android.widget.Toast;
 
-import com.google.android.gms.location.FusedLocationProviderClient;
 import com.google.android.gms.location.LocationCallback;
-import com.google.android.gms.location.LocationRequest;
 import com.google.android.gms.location.LocationResult;
-import com.google.android.gms.location.LocationServices;
 import com.google.android.gms.maps.model.LatLng;
 
 import java.io.IOException;
 import java.util.List;
 
+import senshu_u.uemtp2018.foo.tsukumo_api.Post;
+import senshu_u.uemtp2018.foo.tsukumo_api.PostSender;
+import senshu_u.uemtp2018.foo.tsukumo_api.TsukumoAPI;
 
-public class NewPostActivity extends AppCompatActivity implements PostSendCallback {
+
+public class NewPostActivity extends LocationActivity implements PostSender.SendCallback {
   public static final String TAG = NewPostActivity.class.getSimpleName();
   public static final String PARENT_ID = "parentID";
   public static final String PARENT_TEXT = "parentText";
+  public static final String NEW_POST = "newPost";
+  
   public static final int RELOCATE_REQ_CODE = 1;
   
-  private FusedLocationProviderClient client;
   private TextView locationLabel;
   private final MyLocationCallback locationCallback = new MyLocationCallback();
   private EditText contentEditor;
@@ -50,6 +46,8 @@ public class NewPostActivity extends AppCompatActivity implements PostSendCallba
   
   private TextView inReplyToHeader, inReplyToLabel;
   private ProgressDialog mProgressDialog;
+  public static final int RES_CODE_NEW_POST = 1;
+  private Post newPost;
   
   @Override
   protected void onCreate(Bundle savedInstanceState) {
@@ -60,9 +58,8 @@ public class NewPostActivity extends AppCompatActivity implements PostSendCallba
     locationLabel = findViewById(R.id.myLocationLabel);
     contentEditor = findViewById(R.id.contentEditor);
     setSupportActionBar(toolbar);
-    startUpdatingLocation();
   
-    token = getSharedPreferences(getPackageName(), Context.MODE_PRIVATE).getString(TsukumoAPI.TOKEN_KEY, null);
+    token = PreferenceManager.getDefaultSharedPreferences(this).getString(TsukumoAPI.TOKEN_KEY, null);
     parentID = getIntent().getIntExtra(PARENT_ID, -1);
     inReplyToHeader = findViewById(R.id.inReplyToHeader);
     inReplyToLabel = findViewById(R.id.replyToLabel);
@@ -84,6 +81,8 @@ public class NewPostActivity extends AppCompatActivity implements PostSendCallba
         startActivityForResult(i, RELOCATE_REQ_CODE);
       }
     });
+    setLocationCallback(locationCallback);
+    requestLocationUpdates();
   }
   
   @Override
@@ -98,34 +97,9 @@ public class NewPostActivity extends AppCompatActivity implements PostSendCallba
     Log.d(TAG, String.valueOf(data));
     if (requestCode == RELOCATE_REQ_CODE) {
       if (data == null) return;
-      client.removeLocationUpdates(locationCallback);
+      removeLocationUpdates();
       lastLocation = data.getParcelableExtra(RelocateActivity.EXTRA_LOCATION);
       updateLocationDisplay();
-    }
-  }
-  
-  public void startUpdatingLocation() {
-    //位置情報未許可時
-    if (ActivityCompat.checkSelfPermission(this, Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED) {
-      if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
-        requestPermissions(new String[]{Manifest.permission.ACCESS_FINE_LOCATION}, 0);
-      }
-      //M以前で位置情報が拒否されている状態
-    } else {
-      client = LocationServices.getFusedLocationProviderClient(this);
-      LocationRequest req = LocationRequest.create()
-        .setPriority(LocationRequest.PRIORITY_BALANCED_POWER_ACCURACY)
-        .setInterval(3000);
-      client.requestLocationUpdates(req, locationCallback, null);
-    }
-  }
-  
-  @Override
-  public void onRequestPermissionsResult(int requestCode, @NonNull String[] permissions, @NonNull int[] grantResults) {
-    if (permissions[0].equals(Manifest.permission.ACCESS_FINE_LOCATION) && grantResults[0] == PackageManager.PERMISSION_GRANTED) {
-      startUpdatingLocation();
-    } else {
-      //拒否されたとき
     }
   }
   
@@ -139,7 +113,7 @@ public class NewPostActivity extends AppCompatActivity implements PostSendCallba
       }
       String text = contentEditor.getText().toString();
       if (text.length() == 0) return true;
-      Post newPost = new Post(lastLocation.latitude, lastLocation.longitude, text);
+      newPost = new Post(lastLocation.latitude, lastLocation.longitude, text);
       if (parentID > 0) {
         newPost.setParentID(this.parentID);
       }
@@ -169,6 +143,9 @@ public class NewPostActivity extends AppCompatActivity implements PostSendCallba
     mProgressDialog.dismiss();
     if (succeeded) {
       Toast.makeText(this, R.string.toast_post_sent, Toast.LENGTH_SHORT).show();
+      Intent resIntent = new Intent();
+      resIntent.putExtra(NEW_POST, newPost);
+      setResult(1, resIntent);
       finish();
     } else {
       Toast.makeText(this, R.string.toast_post_send_failed, Toast.LENGTH_SHORT).show();

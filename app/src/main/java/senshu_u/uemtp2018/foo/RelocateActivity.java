@@ -23,6 +23,7 @@ public class RelocateActivity extends AppCompatActivity implements OnMapReadyCal
   private GoogleMap mMap;
   private Marker mMarker;
   private LatLng initialLocation;
+  private String markerId;
   
   @Override
   protected void onCreate(Bundle savedInstanceState) {
@@ -61,14 +62,18 @@ public class RelocateActivity extends AppCompatActivity implements OnMapReadyCal
         finish();
         break;
       case R.id.menuItem_done:
-        LatLng pos = mMarker.getPosition();
-        Intent resultIntent = new Intent();
-        resultIntent.putExtra(EXTRA_LOCATION, pos);
-        setResult(RESULT_CODE, resultIntent);
-        finish();
+        saveAndFinish();
         break;
     }
     return super.onOptionsItemSelected(item);
+  }
+  
+  private void saveAndFinish() {
+    LatLng pos = mMarker.getPosition();
+    Intent resultIntent = new Intent();
+    resultIntent.putExtra(EXTRA_LOCATION, pos);
+    setResult(RESULT_CODE, resultIntent);
+    finish();
   }
   
   /**
@@ -92,18 +97,35 @@ public class RelocateActivity extends AppCompatActivity implements OnMapReadyCal
     mMarker = mMap.addMarker(new MarkerOptions()
       .position(initialLocation)
       .draggable(true));
+    markerId = mMarker.getId();
     mMarker.showInfoWindow();
     mMap.setOnCameraMoveListener(new GoogleMap.OnCameraMoveListener() {
       @Override
       public void onCameraMove() {
         LatLng pos = mMap.getCameraPosition().target;
         mMarker.setPosition(pos);
+      }
+    });
+  
+    mMap.setOnCameraIdleListener(new GoogleMap.OnCameraIdleListener() {
+      @Override
+      public void onCameraIdle() {
+        LatLng pos = mMarker.getPosition();
+        String addr = GeocoderUtil.getAddress(RelocateActivity.this, pos);
+        mMarker.setSnippet(addr);
         mMarker.hideInfoWindow();
         mMarker.setTitle(String.format("%.5f, %.5f", pos.latitude, pos.longitude));
         mMarker.showInfoWindow();
       }
     });
-    
+    mMap.setOnInfoWindowClickListener(new GoogleMap.OnInfoWindowClickListener() {
+      @Override
+      public void onInfoWindowClick(Marker marker) {
+        if (marker.getId().equals(markerId)) {
+          saveAndFinish();
+        }
+      }
+    });
   }
   
 }

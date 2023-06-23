@@ -24,4 +24,7 @@
   <string name="menu_item_update_posts">Fetch new posts</string>
   <string name="menu_item_send">Send</string>
   <string name="menu_item_done">Done</string>
+  <string name="toast_post_put_success">Post is put on your location.</string>
+  <string name="toast_post_put_failed">Unable to put the post.</string>
+  <string name="dialog_putting_post">Putting the post...</string>
 </resources>
