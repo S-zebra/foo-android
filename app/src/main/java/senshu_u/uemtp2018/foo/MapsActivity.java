@@ -186,6 +186,7 @@ public class MapsActivity extends LocationActivity implements OnMapReadyCallback
       se.printStackTrace();
       Toast.makeText(this, R.string.toast_location_denied, Toast.LENGTH_SHORT).show();
     }
+    mMap.setOnMapLoadedCallback(this::fetchPosts);
     mClusterManager = new ClusterManager<>(this, mMap);
     mClusterManager.setAnimation(false);
     mMap.setOnCameraIdleListener(mClusterManager);
@@ -217,7 +218,6 @@ public class MapsActivity extends LocationActivity implements OnMapReadyCallback
         params.bottomMargin = (int) (16 * d);
       }
     });
-    fetchPosts();
   }
   
   @Override

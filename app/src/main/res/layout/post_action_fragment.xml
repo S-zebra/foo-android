@@ -24,16 +24,16 @@
         android:background="@android:color/white">
 
         <android.support.v7.widget.AppCompatImageButton
-          android:id="@+id/keepButton"
-          android:layout_width="64dp"
-          android:layout_height="64dp"
-          android:layout_marginTop="16dp"
-          android:layout_marginEnd="96dp"
-          android:layout_marginRight="96dp"
-          android:scaleType="fitCenter"
-          app:layout_constraintEnd_toEndOf="parent"
-          app:layout_constraintTop_toBottomOf="@+id/postContent"
-          app:srcCompat="@drawable/ic_get_app_black_24dp"/>
+            android:id="@+id/keepButton"
+            android:layout_width="64dp"
+            android:layout_height="64dp"
+            android:layout_marginTop="16dp"
+            android:layout_marginEnd="72dp"
+            android:layout_marginRight="72dp"
+            android:scaleType="fitCenter"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintTop_toBottomOf="@+id/postContent"
+            app:srcCompat="@drawable/ic_get_app_black_24dp" />
 
         <TextView
           android:id="@+id/textView3"
@@ -66,16 +66,16 @@
           tools:text="最近寒くなったな… そろそろマフラーとか防寒具準備しなきゃ、とか思うけどなかなかめんどくさいよね"/>
 
         <android.support.v7.widget.AppCompatImageButton
-          android:id="@+id/replyButton"
-          android:layout_width="64dp"
-          android:layout_height="64dp"
-          android:layout_marginStart="96dp"
-          android:layout_marginLeft="96dp"
-          android:layout_marginTop="16dp"
-          android:scaleType="fitCenter"
-          app:layout_constraintStart_toStartOf="parent"
-          app:layout_constraintTop_toBottomOf="@+id/postContent"
-          app:srcCompat="@drawable/ic_reply_black_24dp"/>
+            android:id="@+id/replyButton"
+            android:layout_width="64dp"
+            android:layout_height="64dp"
+            android:layout_marginStart="72dp"
+            android:layout_marginLeft="72dp"
+            android:layout_marginTop="16dp"
+            android:scaleType="fitCenter"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toBottomOf="@+id/postContent"
+            app:srcCompat="@drawable/ic_reply_black_24dp" />
 
         <TextView
           android:id="@+id/textView2"
